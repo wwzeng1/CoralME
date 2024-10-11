@@ -23,7 +23,6 @@ import com.coralblocks.coralme.util.SystemTimestamper;
 import com.coralblocks.coralme.util.Timestamper;
 import com.coralblocks.coralme.util.RejectReason;
 
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
