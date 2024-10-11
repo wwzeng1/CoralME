@@ -15,9 +15,9 @@
  */
 package com.coralblocks.coralme;
 
-import com.coralblocks.coralme.Order.CancelReason;
-import com.coralblocks.coralme.Order.ExecuteSide;
-import com.coralblocks.coralme.Order.RejectReason;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
 
 public interface OrderListener {
     
