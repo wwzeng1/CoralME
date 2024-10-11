@@ -1,4 +1,4 @@
-// File deleted
+package com.coralblocks.coralme.enums;
 
 import com.coralblocks.coralme.util.CharEnum;
 import com.coralblocks.coralme.util.CharMap;
