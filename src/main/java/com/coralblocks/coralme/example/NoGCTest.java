@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2023 (c) CoralBlocks - http://www.coralblocks.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,11 +25,11 @@ import com.coralblocks.coralme.util.Timestamper;
 
 /**
  * <p>Run this test with <b>-verbose:gc</b> and look for any GC activity. <b>You must not see any.</b></p>
- *
+ * 
  * <p>Alternatively you can pass <i>true</i> to createGarbage to see a lot of GC activity.</p>
- *
+ * 
  * <p>You should also decrease the max size of your heap memory so that if the GC has to kick in, it will do it sooner than later.</p>
- *
+ * 
  * <p>A good command-line example is:  <b><code>java -verbose:gc -Xms128m -Xmx256m -cp target/classes com.coralblocks.coralme.example.NoGCTest</code></b></p>
  */
 public class NoGCTest {
