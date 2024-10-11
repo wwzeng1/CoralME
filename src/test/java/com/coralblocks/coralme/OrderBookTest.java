@@ -15,21 +15,12 @@
  */
 package com.coralblocks.coralme;
 
-import static org.junit.Assert.*;
-
-import java.util.Iterator;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-
-import com.coralblocks.coralme.Order.CancelReason;
-import com.coralblocks.coralme.Order.ExecuteSide;
-import com.coralblocks.coralme.Order.RejectReason;
-import com.coralblocks.coralme.Order.Side;
-import com.coralblocks.coralme.Order.TimeInForce;
-import com.coralblocks.coralme.util.DoubleUtils;
+import com.coralblocks.coralme.enums.CancelReason;
+import com.coralblocks.coralme.enums.ExecuteSide;
+import com.coralblocks.coralme.enums.RejectReason;
+import com.coralblocks.coralme.enums.Side;
+import com.coralblocks.coralme.enums.TimeInForce;
+import com.coralblocks.coralme.enums.Type;
 
 public class OrderBookTest {
 	
