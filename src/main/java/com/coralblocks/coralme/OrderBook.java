@@ -21,7 +21,7 @@ import com.coralblocks.coralme.util.LongMap;
 import com.coralblocks.coralme.util.ObjectPool;
 import com.coralblocks.coralme.util.SystemTimestamper;
 import com.coralblocks.coralme.util.Timestamper;
-import com.coralblocks.coralme.util.RejectReason;
+import com.coralblocks.coralme.RejectReason;
 
 import java.util.ArrayList;
 import java.util.Iterator;
