@@ -24,32 +24,32 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import com.coralblocks.coralme.Order.CancelReason;
-import com.coralblocks.coralme.Order.ExecuteSide;
-import com.coralblocks.coralme.Order.RejectReason;
-import com.coralblocks.coralme.Order.Side;
-import com.coralblocks.coralme.Order.TimeInForce;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
+import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
 import com.coralblocks.coralme.util.DoubleUtils;
 
 public class OrderBookTest {
-	
+
 	private static final long CLIENT_ID = 1002L;
-	
+
 	private OrderBookListener called(OrderBookListener listener, int times) {
 		return Mockito.verify(listener, Mockito.times(times));
 	}
-	
+
 	private void done(OrderBookListener listener) {
 		Mockito.verifyNoMoreInteractions(listener);
 		Mockito.clearInvocations(listener);
 	}
-	
+
 	private void clear(OrderBookListener listener) {
 		Mockito.clearInvocations(listener);
 	}
-	
+
 	private static class OrderExecutedCaptor {
-		
+
 		ArgumentCaptor<OrderBook> 		book = ArgumentCaptor.forClass(OrderBook.class);
 		ArgumentCaptor<Long> 			time = ArgumentCaptor.forClass(Long.class);
 		ArgumentCaptor<Order> 			order = ArgumentCaptor.forClass(Order.class);
