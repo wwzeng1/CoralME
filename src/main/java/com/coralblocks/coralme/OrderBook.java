@@ -21,7 +21,6 @@ import com.coralblocks.coralme.util.LongMap;
 import com.coralblocks.coralme.util.ObjectPool;
 import com.coralblocks.coralme.util.SystemTimestamper;
 import com.coralblocks.coralme.util.Timestamper;
-import com.coralblocks.coralme.RejectReason;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -152,7 +151,7 @@ public class OrderBook implements OrderListener {
 
         if (!hasBids()) return null;
 
-        PriceLevel pl = head(Side.BUY);
+        PriceLevel pl = head(Order.Side.BUY);
 
         return pl.head();
     }
@@ -161,7 +160,7 @@ public class OrderBook implements OrderListener {
 
         if (!hasAsks()) return null;
 
-        PriceLevel pl = head(Side.SELL);
+        PriceLevel pl = head(Order.Side.SELL);
 
         return pl.head();
     }
@@ -185,12 +184,12 @@ public class OrderBook implements OrderListener {
         return orders.isEmpty();
     }
 
-    public final PriceLevel head(Side side) {
+    public final PriceLevel head(Order.Side side) {
 
         return head[side.index()];
     }
 
-    public final PriceLevel tail(Side side) {
+    public final PriceLevel tail(Order.Side side) {
 
         return tail[side.index()];
     }
@@ -206,9 +205,9 @@ public class OrderBook implements OrderListener {
 
     public final long getSpread() {
 
-        PriceLevel bestBid = head[Side.BUY.index()];
+        PriceLevel bestBid = head[Order.Side.BUY.index()];
 
-        PriceLevel bestAsk = head[Side.SELL.index()];
+        PriceLevel bestAsk = head[Order.Side.SELL.index()];
 
         assert bestBid != null && bestAsk != null;
 
@@ -217,9 +216,9 @@ public class OrderBook implements OrderListener {
 
     public final State getState() {
 
-        PriceLevel bestBid = head[Side.BUY.index()];
+        PriceLevel bestBid = head[Order.Side.BUY.index()];
 
-        PriceLevel bestAsk = head[Side.SELL.index()];
+        PriceLevel bestAsk = head[Order.Side.SELL.index()];
 
         if (bestBid != null && bestAsk != null) {
 
@@ -241,7 +240,7 @@ public class OrderBook implements OrderListener {
         }
     }
 
-    public final boolean hasTop(Side side) {
+    public final boolean hasTop(Order.Side side) {
 
         return side.isBuy() ? hasBestBid() : hasBestAsk();
     }
@@ -256,22 +255,22 @@ public class OrderBook implements OrderListener {
 
     public final boolean hasBestBid() {
 
-        return head[Side.BUY.index()] != null;
+        return head[Order.Side.BUY.index()] != null;
     }
 
     public final boolean hasBestAsk() {
 
-        return head[Side.SELL.index()] != null;
+        return head[Order.Side.SELL.index()] != null;
     }
 
-    public final long getBestPrice(Side side) {
+    public final long getBestPrice(Order.Side side) {
 
         return side.isBuy() ? getBestBidPrice() : getBestAskPrice();
     }
 
     public final long getBestBidPrice() {
 
-        int index = Side.BUY.index();
+        int index = Order.Side.BUY.index();
 
         assert head[index] != null;
 
@@ -280,49 +279,50 @@ public class OrderBook implements OrderListener {
 
     public final long getBestAskPrice() {
 
-        int index = Side.SELL.index();
+        int index = Order.Side.SELL.index();
 
         assert head[index] != null;
 
         return head[index].getPrice();
     }
 
-    public final long getBestSize(Side side) {
+    public final long getBestSize(Order.Side side) {
 
         return side.isBuy() ? getBestBidSize() : getBestAskSize();
     }
 
     public final long getBestBidSize() {
 
-        int index = Side.BUY.index();
+        int index = Order.Side.BUY.index();
 
         assert head[index] != null;
 
         return head[index].getSize();
     }
+
 
     public final long getBestAskSize() {
 
-        int index = Side.SELL.index();
+        int index = Order.Side.SELL.index();
 
         assert head[index] != null;
 
         return head[index].getSize();
     }
 
-    public final int getLevels(Side side) {
+    public final int getLevels(Order.Side side) {
 
         return side.isBuy() ? getBidLevels() : getAskLevels();
     }
 
     public final int getBidLevels() {
 
-        return levels[Side.BUY.index()];
+        return levels[Order.Side.BUY.index()];
     }
 
     public final int getAskLevels() {
 
-        return levels[Side.SELL.index()];
+        return levels[Order.Side.SELL.index()];
     }
 
     public void showOrders() {
@@ -345,9 +345,9 @@ public class OrderBook implements OrderListener {
         return sb.toString();
     }
 
-    public void levels(StringBuilder sb, Side side) {
+    public void levels(StringBuilder sb, Order.Side side) {
 
-        if (side == Side.SELL) {
+        if (side == Order.Side.SELL) {
 
             if (!hasAsks()) {
                 return;
@@ -379,9 +379,9 @@ public class OrderBook implements OrderListener {
         }
     }
 
-    public void orders(StringBuilder sb, Side side) {
+    public void orders(StringBuilder sb, Order.Side side) {
 
-        if (side == Side.SELL) {
+        if (side == Order.Side.SELL) {
 
             if (!hasAsks()) {
                 return;
@@ -421,7 +421,7 @@ public class OrderBook implements OrderListener {
 
     public void orders(StringBuilder sb) {
 
-        if (hasBids()) orders(sb, Side.BUY);
+        if (hasBids()) orders(sb, Order.Side.BUY);
         if (hasSpread()) {
             sb.append("-------- ");
             String spread = String.format("%9.2f", DoubleUtils.toDouble(getSpread()));
@@ -429,12 +429,12 @@ public class OrderBook implements OrderListener {
         } else {
             sb.append("-------- \n");
         }
-        if (hasAsks()) orders(sb, Side.SELL);
+        if (hasAsks()) orders(sb, Order.Side.SELL);
     }
 
     public void levels(StringBuilder sb) {
 
-        if (hasBids()) levels(sb, Side.BUY);
+        if (hasBids()) levels(sb, Order.Side.BUY);
         if (hasSpread()) {
             sb.append("-------- ");
             String spread = String.format("%9.2f", DoubleUtils.toDouble(getSpread()));
@@ -442,7 +442,7 @@ public class OrderBook implements OrderListener {
         } else {
             sb.append("-------- \n");
         }
-        if (hasAsks()) levels(sb, Side.SELL);
+        if (hasAsks()) levels(sb, Order.Side.SELL);
     }
 
     private final void match(Order order) {
@@ -454,7 +454,7 @@ public class OrderBook implements OrderListener {
         OUTER:
         for (PriceLevel pl = head[index]; pl != null; pl = pl.next) {
 
-            if (order.getType() != Type.MARKET
+            if (order.getType() != Order.Type.MARKET
                     && order.getSide().isOutside(order.getPrice(), pl.getPrice())) break;
 
             for (Order o = pl.head(); o != null; o = o.next) {
@@ -475,14 +475,14 @@ public class OrderBook implements OrderListener {
 
                 o.execute(
                         ts,
-                        ExecuteSide.MAKER,
+                        Order.ExecuteSide.MAKER,
                         sizeToExecute,
                         priceExecuted,
                         execId1,
                         matchId); // notify the maker first?
 
                 order.execute(
-                        ts, ExecuteSide.TAKER, sizeToExecute, priceExecuted, execId2, matchId);
+                        ts, Order.ExecuteSide.TAKER, sizeToExecute, priceExecuted, execId2, matchId);
 
                 if (order.isTerminal()) {
 
@@ -492,7 +492,7 @@ public class OrderBook implements OrderListener {
         }
     }
 
-    private final PriceLevel findPriceLevel(Side side, long price) {
+    private final PriceLevel findPriceLevel(Order.Side side, long price) {
 
         PriceLevel foundPriceLevel = null;
 
@@ -568,13 +568,14 @@ public class OrderBook implements OrderListener {
     }
 
     public Order createLimit(
+
             long clientId,
             CharSequence clientOrderId,
             long exchangeOrderId,
-            Side side,
+            Order.Side side,
             long size,
             double price,
-            TimeInForce tif) {
+            Order.TimeInForce tif) {
         return createLimit(
                 clientId,
                 clientOrderId,
@@ -589,40 +590,40 @@ public class OrderBook implements OrderListener {
             long clientId,
             CharSequence clientOrderId,
             long exchangeOrderId,
-            Side side,
+            Order.Side side,
             long size,
             long price,
-            TimeInForce tif) {
+            Order.TimeInForce tif) {
         return createOrder(
-                clientId, clientOrderId, exchangeOrderId, side, size, price, Type.LIMIT, tif);
+                clientId, clientOrderId, exchangeOrderId, side, size, price, Order.Type.LIMIT, tif);
     }
 
     public Order createMarket(
-            long clientId, CharSequence clientOrderId, long exchangeOrderId, Side side, long size) {
+            long clientId, CharSequence clientOrderId, long exchangeOrderId, Order.Side side, long size) {
         return createOrder(
-                clientId, clientOrderId, exchangeOrderId, side, size, 0, Type.MARKET, null);
+                clientId, clientOrderId, exchangeOrderId, side, size, 0, Order.Type.MARKET, null);
     }
 
-    protected RejectReason validateOrder(Order order) {
+    protected Order.RejectReason validateOrder(Order order) {
         return null;
     }
 
     private final Order fillOrCancel(Order order, long exchangeOrderId) {
 
-        Type type = order.getType();
+        Order.Type type = order.getType();
 
-        if (type == Type.MARKET && order.getPrice() != 0) {
+        if (type == Order.Type.MARKET && order.getPrice() != 0) {
 
             order.reject(
                     timestamper.nanoEpoch(),
-                    RejectReason
+                    Order.RejectReason
                             .BAD_PRICE); // remember... the OrderListener callback will return the
                                          // order to the pool...
 
             return order;
         }
 
-        RejectReason rejectReason = validateOrder(order);
+        Order.RejectReason rejectReason = validateOrder(order);
 
         if (rejectReason != null) {
 
@@ -645,16 +646,16 @@ public class OrderBook implements OrderListener {
 
         if (!order.isTerminal()) {
 
-            if (type == Type.MARKET) {
+            if (type == Order.Type.MARKET) {
 
-                order.cancel(timestamper.nanoEpoch(), CancelReason.NO_LIQUIDITY);
+                order.cancel(timestamper.nanoEpoch(), Order.CancelReason.NO_LIQUIDITY);
 
             } else {
 
-                CancelReason cancelReason = CancelReason.MISSED;
+                Order.CancelReason cancelReason = Order.CancelReason.MISSED;
 
                 if (!hasTop(order.getOtherSide())) {
-                    cancelReason = CancelReason.NO_LIQUIDITY;
+                    cancelReason = Order.CancelReason.NO_LIQUIDITY;
                 }
 
                 order.cancel(timestamper.nanoEpoch(), cancelReason);
@@ -666,7 +667,7 @@ public class OrderBook implements OrderListener {
 
     private Order fillOrRest(Order order, long exchangeOrderId) {
 
-        RejectReason rejectReason = validateOrder(order);
+        Order.RejectReason rejectReason = validateOrder(order);
 
         if (rejectReason != null) {
 
@@ -696,7 +697,7 @@ public class OrderBook implements OrderListener {
                 && hasTop(order.getOtherSide())
                 && order.getSide().isInside(order.getPrice(), getBestPrice(order.getOtherSide()))) {
 
-            CancelReason cancelReason = CancelReason.CROSSED;
+            Order.CancelReason cancelReason = Order.CancelReason.CROSSED;
 
             order.cancel(timestamper.nanoEpoch(), cancelReason);
 
@@ -712,15 +713,15 @@ public class OrderBook implements OrderListener {
             long clientId,
             CharSequence clientOrderId,
             long exchangeOrderId,
-            Side side,
+            Order.Side side,
             long size,
             long price,
-            Type type,
-            TimeInForce tif) {
+            Order.Type type,
+            Order.TimeInForce tif) {
 
         Order order = getOrder(clientId, clientOrderId, security, side, size, price, type, tif);
 
-        if (tif == TimeInForce.IOC || type == Type.MARKET) {
+        if (tif == Order.TimeInForce.IOC || type == Order.Type.MARKET) {
 
             return fillOrCancel(order, exchangeOrderId);
 
@@ -738,11 +739,11 @@ public class OrderBook implements OrderListener {
 
         if (hasBids()) {
 
-            for (PriceLevel pl = head(Side.BUY); pl != null; pl = pl.next) {
+            for (PriceLevel pl = head(Order.Side.BUY); pl != null; pl = pl.next) {
 
                 for (Order o = pl.head(); o != null; o = o.next) {
 
-                    if (o.getTimeInForce() != TimeInForce.GTC) continue;
+                    if (o.getTimeInForce() != Order.TimeInForce.GTC) continue;
 
                     newOrderBook.createLimit(
                             o.getClientId(),
@@ -751,20 +752,20 @@ public class OrderBook implements OrderListener {
                             o.getSide(),
                             o.getOpenSize(),
                             o.getPrice(),
-                            TimeInForce.GTC);
+                            Order.TimeInForce.GTC);
 
-                    o.cancel(timestamper.nanoEpoch(), CancelReason.ROLLED);
+                    o.cancel(timestamper.nanoEpoch(), Order.CancelReason.ROLLED);
                 }
             }
         }
 
         if (hasAsks()) {
 
-            for (PriceLevel pl = head(Side.SELL); pl != null; pl = pl.next) {
+            for (PriceLevel pl = head(Order.Side.SELL); pl != null; pl = pl.next) {
 
                 for (Order o = pl.head(); o != null; o = o.next) {
 
-                    if (o.getTimeInForce() != TimeInForce.GTC) continue;
+                    if (o.getTimeInForce() != Order.TimeInForce.GTC) continue;
 
                     newOrderBook.createLimit(
                             o.getClientId(),
@@ -773,9 +774,9 @@ public class OrderBook implements OrderListener {
                             o.getSide(),
                             o.getOpenSize(),
                             o.getPrice(),
-                            TimeInForce.GTC);
+                            Order.TimeInForce.GTC);
 
-                    o.cancel(timestamper.nanoEpoch(), CancelReason.ROLLED);
+                    o.cancel(timestamper.nanoEpoch(), Order.CancelReason.ROLLED);
                 }
             }
         }
@@ -793,11 +794,11 @@ public class OrderBook implements OrderListener {
 
             assert order.isTerminal() == false;
 
-            if (order.getTimeInForce() != TimeInForce.DAY) continue;
+            if (order.getTimeInForce() != Order.TimeInForce.DAY) continue;
 
             iter.remove(); // important otherwise you get a ConcurrentModificationException!
 
-            order.cancel(timestamper.nanoEpoch(), CancelReason.EXPIRED);
+            order.cancel(timestamper.nanoEpoch(), Order.CancelReason.EXPIRED);
         }
     }
 
@@ -813,7 +814,7 @@ public class OrderBook implements OrderListener {
 
             iter.remove(); // important otherwise you get a ConcurrentModificationException!
 
-            order.cancel(timestamper.nanoEpoch(), CancelReason.PURGED);
+            order.cancel(timestamper.nanoEpoch(), Order.CancelReason.PURGED);
         }
     }
 
@@ -834,11 +835,12 @@ public class OrderBook implements OrderListener {
             long clientId,
             CharSequence clientOrderId,
             String security,
-            Side side,
+            Order.Side side,
             long size,
             long price,
-            Type type,
-            TimeInForce tif) {
+            Order.Type type,
+
+            Order.TimeInForce tif) {
 
         Order order = orderPool.get();
 
@@ -900,7 +902,7 @@ public class OrderBook implements OrderListener {
     }
 
     @Override
-    public void onOrderCanceled(long time, Order order, CancelReason reason) {
+    public void onOrderCanceled(long time, Order order, Order.CancelReason reason) {
 
         removeOrder(order);
 
@@ -915,7 +917,7 @@ public class OrderBook implements OrderListener {
     public void onOrderExecuted(
             long time,
             Order order,
-            ExecuteSide execSide,
+            Order.ExecuteSide execSide,
             long sizeExecuted,
             long priceExecuted,
             long executionId,
@@ -954,7 +956,7 @@ public class OrderBook implements OrderListener {
     }
 
     @Override
-    public void onOrderRejected(long time, Order order, RejectReason reason) {
+    public void onOrderRejected(long time, Order order, Order.RejectReason reason) {
 
         removeOrder(order);
 
