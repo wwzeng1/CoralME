@@ -24,11 +24,12 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import com.coralblocks.coralme.CancelReason;
-import com.coralblocks.coralme.ExecuteSide;
-import com.coralblocks.coralme.RejectReason;
-import com.coralblocks.coralme.Side;
-import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Order.CancelReason;
+import com.coralblocks.coralme.Order.ExecuteSide;
+import com.coralblocks.coralme.Order.RejectReason;
+import com.coralblocks.coralme.Order.Side;
+import com.coralblocks.coralme.Order.TimeInForce;
+import com.coralblocks.coralme.Order.Type;
 import com.coralblocks.coralme.util.DoubleUtils;
 
 public class OrderBookTest {
