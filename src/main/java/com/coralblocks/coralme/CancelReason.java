@@ -32,3 +32,4 @@ public enum CancelReason implements CharEnum {
         return b;
     }
 }
+
