@@ -21,15 +21,13 @@ package com.coralblocks.coralme.util;
  * <p>There are of course much better ways to get the epoch with nanosecond precision. And without producing any garbage for the GC.</p>
  */
 public final class SystemTimestamper implements Timestamper {
-	
-	/**
-	 * Simply returns System.currentTimeMillis * 1000000L.
-	 * Of course this is bad, so feel free to implement other better/native/garbage-free timestampers ;)
-	 * 
-	 * @return the epoch timestamp in nanoseconds
-	 */
+
+	private final long startTimeMillis = System.currentTimeMillis() * 1_000_000L;
+	private final long startTimeNano = System.nanoTime();
+
+
 	@Override
 	public long nanoEpoch() {
-		return System.nanoTime();
+		return startTimeMillis + (System.nanoTime() - startTimeNano);
 	}
 }
