@@ -28,7 +28,7 @@ public class LinkedObjectPoolTest {
 	@Test
 	public void testSameInstance() {
 		
-		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(8, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(8, StringBuilder::new);
 		
 		Assert.assertEquals(8, pool.size());
 		
@@ -69,7 +69,7 @@ public class LinkedObjectPoolTest {
 	@Test
 	public void testRunOutOfInstances() {
 		
-		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(2, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(2, StringBuilder::new);
 		
 		Set<StringBuilder> set = new HashSet<StringBuilder>(2);
 		
@@ -109,7 +109,7 @@ public class LinkedObjectPoolTest {
 	@Test
 	public void testIncreasingPoolSize() {
 		
-		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(2, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(2, StringBuilder::new);
 		
 		Assert.assertEquals(2, pool.size());
 		
@@ -125,7 +125,7 @@ public class LinkedObjectPoolTest {
 	@Test
 	public void testLIFOForGoodCaching() {
 		
-		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(2, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(2, StringBuilder::new);
 		
 		Assert.assertEquals(2, pool.size());
 		
