@@ -58,7 +58,7 @@ public final class ArrayObjectPool<E> implements ObjectPool<E> {
 
 
 
-    public ArrayObjectPool(int size, Supplier<E> supplier) {
+    public ArrayObjectPool(int size, Supplier<? extends E> supplier) {
         this(size, size, supplier);
     }
 
@@ -69,7 +69,7 @@ public final class ArrayObjectPool<E> implements ObjectPool<E> {
      * @param backupPoolSize the size of the backup pool
      * @param supplier       the supplier that will be used to create the instances
      */
-    public ArrayObjectPool(int size, int backupPoolSize, Supplier<E> supplier) {
+    public ArrayObjectPool(int size, int backupPoolSize, Supplier<? extends E> supplier) {
 
         pool = new Object[size];
 

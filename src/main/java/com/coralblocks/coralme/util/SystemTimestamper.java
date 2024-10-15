@@ -15,6 +15,9 @@
  */
 package com.coralblocks.coralme.util;
 
+import java.time.Instant;
+import java.util.concurrent.TimeUnit;
+
 /**
  * <p>This timestamper is here just for illustrative purposes.</p>
  * 
@@ -22,12 +25,13 @@ package com.coralblocks.coralme.util;
  */
 public final class SystemTimestamper implements Timestamper {
 
-	private final long startTimeMillis = System.currentTimeMillis() * 1_000_000L;
-	private final long startTimeNano = System.nanoTime();
+	private static final long EPOCH_OFFSET_NANOS = TimeUnit.SECONDS.toNanos(Instant.now().getEpochSecond()) - System.nanoTime();
 
-
+	// Get nanoseconds since Epoch
 	@Override
-	public long nanoEpoch() {
-		return startTimeMillis + (System.nanoTime() - startTimeNano);
+    public long nanoEpoch() {
+		return System.nanoTime() + EPOCH_OFFSET_NANOS;
 	}
+
+
 }
