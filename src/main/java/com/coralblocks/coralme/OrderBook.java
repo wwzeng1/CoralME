@@ -32,9 +32,6 @@ import com.coralblocks.coralme.util.ObjectPool;
 import com.coralblocks.coralme.util.SystemTimestamper;
 import com.coralblocks.coralme.util.Timestamper;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class OrderBook implements OrderListener {
 
 	private static final boolean DEFAULT_ALLOW_TRADE_TO_SELF = true;
@@ -68,36 +65,36 @@ public class OrderBook implements OrderListener {
 	private final Timestamper timestamper;
 
 	private final boolean allowTradeToSelf;
-	
-	
+
+
 	public OrderBook(String security, boolean allowTradeToSelf) {
 		this(security, TIMESTAMPER, null, allowTradeToSelf);
 	}
-	
+
 	public OrderBook(String security) {
 		this(security, TIMESTAMPER, null);
 	}
-	
+
 	public OrderBook(String security, Timestamper timestamper, boolean allowTradeToSelf) {
 		this(security, timestamper, null, allowTradeToSelf);
 	}
-	
+
 	public OrderBook(String security, Timestamper timestamper) {
 		this(security, timestamper, null);
 	}
-	
+
 	public OrderBook(String security, OrderBookListener listener, boolean allowTradeToSelf) {
 		this(security, TIMESTAMPER, listener, allowTradeToSelf);
 	}
-	
+
 	public OrderBook(String security, OrderBookListener listener) {
 		this(security, TIMESTAMPER, listener);
 	}
-	
+
 	public OrderBook(String security, Timestamper timestamper, OrderBookListener listener) {
 		this(security, timestamper, listener, DEFAULT_ALLOW_TRADE_TO_SELF);
 	}
-	
+
 	public OrderBook(OrderBook orderBook) {
 		this(orderBook.getSecurity(), orderBook.getTimestamper(), null, orderBook.isAllowTradeToSelf());
 		 List<OrderBookListener> listeners = orderBook.getListeners();
@@ -107,13 +104,13 @@ public class OrderBook implements OrderListener {
 	}
 
 	public OrderBook(String security, Timestamper timestamper, OrderBookListener listener, boolean allowTradeToSelf) {
-		
+
 		this.security = security;
-		
+
 		this.timestamper = timestamper;
-		
+
 		this.allowTradeToSelf = allowTradeToSelf;
-		
+
 		if (listener != null) listeners.add(listener);
 	}
 	
