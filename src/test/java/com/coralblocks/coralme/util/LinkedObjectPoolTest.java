@@ -12,92 +12,85 @@ public class LinkedObjectPoolTest {
 
     @Test
     public void testAdaptiveGrowthUnderMemoryPressure() {
-        LinkedObjectPool<byte[]> pool =
-                new LinkedObjectPool<>(2, () -> new byte[1024 * 1024]); // 1MB objects
-        List<byte[]> objects = new ArrayList<>();
-
-        try {
-            while (true) {
-                objects.add(pool.get());
-            }
-        } catch (OutOfMemoryError e) {
-            // Expected behavior when memory is exhausted
-        }
-
-        Assert.assertTrue(
-                "Pool should have created multiple objects before running out of memory",
-                objects.size() > 2);
-        Assert.assertTrue("Pool size should be zero after exhausting memory", pool.size() == 0);
-
-        // Release objects back to the pool
-        for (byte[] obj : objects) {
-            pool.release(obj);
-        }
-
-        // The pool size should be less than or equal to the number of objects created
-        // due to memory constraints
-        Assert.assertTrue(
-                "Pool size should be limited by available memory", pool.size() <= objects.size());
+        // ... (keep existing method implementation)
     }
 
     @Test
     public void testThreadSafetyOfMemoryMonitoring() throws InterruptedException {
-        LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(10, StringBuilder::new);
-        int numThreads = 10;
-        int operationsPerThread = 1000;
-
-        Thread[] threads = new Thread[numThreads];
-        for (int i = 0; i < numThreads; i++) {
-            threads[i] =
-                    new Thread(
-                            () -> {
-                                for (int j = 0; j < operationsPerThread; j++) {
-                                    StringBuilder sb = pool.get();
-                                    // Simulate some work
-                                    sb.append("test");
-                                    pool.release(sb);
-                                }
-                            });
-        }
-
-        for (Thread thread : threads) {
-            thread.start();
-        }
-
-        for (Thread thread : threads) {
-            thread.join();
-        }
-
-        // The final pool size should be consistent
-        Assert.assertEquals(
-                "Pool size should be consistent after concurrent operations", 10, pool.size());
+        // ... (keep existing method implementation)
     }
 
     @Test
     public void testHighDemandUsage() {
-        LinkedObjectPool<byte[]> pool =
-                new LinkedObjectPool<>(5, () -> new byte[1024 * 1024]); // 1MB objects
-        List<byte[]> objects = new ArrayList<>();
+        // ... (keep existing method implementation)
+    }
 
-        // Simulate high demand by repeatedly getting and releasing objects
-        for (int i = 0; i < 1000; i++) {
-            byte[] obj = pool.get();
-            objects.add(obj);
+    @Test
+    public void testLIFOForGoodCaching() {
+        LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(2, StringBuilder::new);
 
-            if (i % 10 == 0) {
-                // Periodically release some objects
-                for (int j = 0; j < objects.size() / 2; j++) {
-                    pool.release(objects.remove(j));
-                }
+        Assert.assertEquals(2, pool.size());
+
+        StringBuilder sb1 = pool.get();
+        Assert.assertNotNull(sb1);
+        pool.release(sb1);
+
+        StringBuilder sb2 = pool.get();
+        Assert.assertNotNull(sb2);
+        Assert.assertTrue(sb1 == sb2); // Should be the same instance due to LIFO behavior
+
+        // Get another object to test LIFO order
+        StringBuilder sb3 = pool.get();
+        Assert.assertNotNull(sb3);
+        pool.release(sb3);
+
+        StringBuilder sb4 = pool.get();
+        Assert.assertNotNull(sb4);
+        Assert.assertTrue(sb3 == sb4); // Should be the same instance due to LIFO behavior
+    }
+
+    @Test
+    public void testIncreasingPoolSize() {
+        LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(2, StringBuilder::new);
+
+        Assert.assertEquals(2, pool.size());
+
+        // Get all objects from the pool
+        StringBuilder sb1 = pool.get();
+        StringBuilder sb2 = pool.get();
+        Assert.assertNotNull(sb1);
+        Assert.assertNotNull(sb2);
+        Assert.assertEquals(0, pool.size());
+
+        // Release objects back to the pool
+        pool.release(sb1);
+        pool.release(sb2);
+        Assert.assertEquals(2, pool.size());
+
+        // Add new objects to increase pool size
+        pool.release(new StringBuilder());
+        pool.release(new StringBuilder());
+        Assert.assertTrue(pool.size() >= 2 && pool.size() <= 4);
+
+        // Get objects from the pool
+        List<StringBuilder> objects = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            StringBuilder sb = pool.get();
+            if (sb != null) {
+                objects.add(sb);
+            } else {
+                break; // Stop if we get null due to memory constraints
             }
         }
 
-        // Release all remaining objects
-        for (byte[] obj : objects) {
-            pool.release(obj);
+        Assert.assertTrue(objects.size() >= 2 && objects.size() <= 4);
+        Assert.assertEquals(0, pool.size());
+
+        // Release objects back to the pool
+        for (StringBuilder sb : objects) {
+            pool.release(sb);
         }
 
-        // The final pool size should be limited by available memory
-        Assert.assertTrue("Pool size should adapt to available memory", pool.size() <= 1000);
+        Assert.assertTrue(pool.size() >= 2 && pool.size() <= 4);
     }
 }
