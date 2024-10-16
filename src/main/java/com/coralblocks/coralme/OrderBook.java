@@ -19,12 +19,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.coralblocks.coralme.Order.CancelReason;
-import com.coralblocks.coralme.Order.ExecuteSide;
-import com.coralblocks.coralme.Order.RejectReason;
-import com.coralblocks.coralme.Order.Side;
-import com.coralblocks.coralme.Order.TimeInForce;
-import com.coralblocks.coralme.Order.Type;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
+import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Type;
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.LinkedObjectPool;
 import com.coralblocks.coralme.util.LongMap;
@@ -32,38 +32,41 @@ import com.coralblocks.coralme.util.ObjectPool;
 import com.coralblocks.coralme.util.SystemTimestamper;
 import com.coralblocks.coralme.util.Timestamper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class OrderBook implements OrderListener {
-	
+
 	private static final boolean DEFAULT_ALLOW_TRADE_TO_SELF = true;
-	
+
 	private static final Timestamper TIMESTAMPER = new SystemTimestamper();
-	
+
 	public static enum State { NORMAL, LOCKED, CROSSED, ONESIDED, EMPTY }
-	
+
 	private final ObjectPool<Order> orderPool = new LinkedObjectPool<Order>(8, Order.class);
-	
+
 	private final ObjectPool<PriceLevel> priceLevelPool = new LinkedObjectPool<PriceLevel>(8, PriceLevel.class);
-	
+
 	private long execId = 0;
-	
+
 	private long matchId = 0;
-	
+
 	private PriceLevel[] head = new PriceLevel[2];
-	
+
 	private PriceLevel[] tail = new PriceLevel[2];
-	
+
 	private int[] levels = new int[] { 0, 0 };
-	
+
 	private final LongMap<Order> orders = new LongMap<Order>();
-	
+
 	private final String security;
-	
+
 	private long lastExecutedPrice = Long.MAX_VALUE;
-	
+
 	private final List<OrderBookListener> listeners = new ArrayList<OrderBookListener>(8);
-	
+
 	private final Timestamper timestamper;
-	
+
 	private final boolean allowTradeToSelf;
 	
 	
