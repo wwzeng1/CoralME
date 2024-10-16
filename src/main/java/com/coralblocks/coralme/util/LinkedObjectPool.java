@@ -20,7 +20,8 @@ import java.util.function.Supplier;
 /**
  * An object pool backed up by an internal linked list with adaptive memory management. Instances
  * will be created on demand if the pool runs out of instances, and the pool's growth is limited
- * based on available memory.
+ * based on available memory. If memory is not available to create new instances, the get() method
+ * will return null.
  *
  * <p><b>NOTE:</b> This data structure is designed to be used by <b>single-threaded systems</b> for
  * object pooling, but includes a separate thread for memory monitoring.
@@ -66,7 +67,8 @@ public class LinkedObjectPool<E> implements ObjectPool<E> {
      * Retrieves an instance from the pool or creates a new one if the pool is empty. This method
      * considers memory constraints when creating new instances.
      *
-     * @return an instance from the pool
+     * @return an instance from the pool, or null if memory is not available to create a new
+     *     instance
      */
     @Override
     public final E get() {
@@ -74,7 +76,7 @@ public class LinkedObjectPool<E> implements ObjectPool<E> {
             if (isMemoryAvailable()) {
                 return supplier.get();
             } else {
-                throw new OutOfMemoryError("Cannot create new instance due to memory constraints");
+                return null; // Return null when memory is not available to create a new instance
             }
         }
         return queue.removeLast();
