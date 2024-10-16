@@ -5,23 +5,32 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 
 /**
- * A utility class that monitors memory usage and updates the LinkedObjectPool with the current
- * available memory.
+ * A utility class that monitors memory usage and updates a callback with the current
+ * available memory status.
  */
 class MemoryMonitor {
-    private final LinkedObjectPool<?> pool;
+    private final MemoryCallback callback;
     private final MemoryMXBean memoryMXBean;
     private volatile boolean running;
     private Thread monitorThread;
+    private final long minMemory;
+    private final long frequency;
+
 
     /**
-     * Creates a new MemoryMonitor for the given LinkedObjectPool.
+     * Creates a new MemoryMonitor for the given callback.
      *
-     * @param pool the LinkedObjectPool to update with memory information
+     * @param callback the MemoryCallback to update with memory information
+     * @param percentage the minimum percentage of memory that should be available
      */
-    MemoryMonitor(LinkedObjectPool<?> pool) {
-        this.pool = pool;
+    MemoryMonitor(MemoryCallback callback, double percentage, long frequency) {
+        this.callback = callback;
         this.memoryMXBean = ManagementFactory.getMemoryMXBean();
+
+        MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
+        this.minMemory = (long)((heapMemoryUsage.getMax() - heapMemoryUsage.getUsed()) * percentage);
+        this.frequency = frequency;
+
         this.running = true;
     }
 
@@ -40,9 +49,11 @@ class MemoryMonitor {
 
     private void monitorMemory() {
         while (running && !Thread.currentThread().isInterrupted()) {
+
             MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
             long availableMemory = heapMemoryUsage.getMax() - heapMemoryUsage.getUsed();
-            pool.updateAvailableMemory(availableMemory);
+            callback.isMemoryAvailable(availableMemory > minMemory);
+
             try {
                 Thread.sleep(1000); // Update every second
             } catch (InterruptedException e) {
@@ -51,3 +62,4 @@ class MemoryMonitor {
         }
     }
 }
+

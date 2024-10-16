@@ -28,11 +28,11 @@ import java.util.function.Supplier;
  *
  * @param <E> the type of objects this object pool will hold
  */
-public class LinkedObjectPool<E> implements ObjectPool<E> {
+public final class LinkedObjectPool<E> implements ObjectPool<E>, MemoryCallback {
 
     private final LinkedObjectList<E> queue;
     private final Supplier<? extends E> supplier;
-    private volatile long availableMemory;
+    private volatile boolean isMemoryAvailable = true;
     private final MemoryMonitor memoryMonitor;
     private static final double MEMORY_THRESHOLD = 0.05; // 5% of max memory
 
@@ -45,10 +45,12 @@ public class LinkedObjectPool<E> implements ObjectPool<E> {
     public LinkedObjectPool(int initialSize, Supplier<? extends E> s) {
         supplier = s;
         queue = new LinkedObjectList<>(initialSize);
+
         for (int i = 0; i < initialSize; i++) {
             queue.addLast(supplier.get());
         }
-        memoryMonitor = new MemoryMonitor(this);
+
+        memoryMonitor = new MemoryMonitor(this, 0.05, 1000); // 5 percent
         memoryMonitor.start();
     }
 
@@ -75,9 +77,11 @@ public class LinkedObjectPool<E> implements ObjectPool<E> {
         if (!queue.isEmpty()) {
             return queue.removeLast();
         }
-        if (isMemoryAvailable()) {
+
+        if (isMemoryAvailable) {
             return supplier.get();
         }
+
         return null; // Return null when memory is not available to create a new instance
     }
 
@@ -89,29 +93,20 @@ public class LinkedObjectPool<E> implements ObjectPool<E> {
      */
     @Override
     public final void release(E e) {
-        if (isMemoryAvailable()) {
-            queue.addLast(e);
-        }
+
+        queue.addLast(e);
+
         // If memory is not available, the object is discarded and left for garbage collection
     }
 
-    /**
-     * Checks if there's enough memory available to add or create new objects.
-     *
-     * @return true if memory is available, false otherwise
-     */
-    private boolean isMemoryAvailable() {
-        long maxMemory = Runtime.getRuntime().maxMemory();
-        return availableMemory > maxMemory * MEMORY_THRESHOLD;
-    }
 
     /**
      * Updates the available memory. This method is called by the MemoryMonitor.
      *
-     * @param availableMemory the current available memory
+     * @param isMemoryAvailable the current available memory
      */
-    void updateAvailableMemory(long availableMemory) {
-        this.availableMemory = availableMemory;
+    public void isMemoryAvailable(boolean isMemoryAvailable) {
+         this.isMemoryAvailable = isMemoryAvailable;
     }
 
     /** Stops the memory monitor thread. Should be called when the pool is no longer needed. */

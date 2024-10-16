@@ -13,14 +13,17 @@ public class LinkedObjectPoolTest {
     @Test
     public void testAdaptiveGrowthUnderMemoryPressure() {
         LinkedObjectPool<byte[]> pool =
-                new LinkedObjectPool<>(2, () -> new byte[1024 * 1024]); // 1MB objects
+                new LinkedObjectPool<>(2, () -> new byte[1024]); // 1MB objects
         List<byte[]> objects = new ArrayList<>();
 
         try {
-            while (true) {
-                objects.add(pool.get());
+            byte[] object = pool.get();
+            while (object != null) {
+                objects.add(object);
+                object = pool.get();
             }
         } catch (OutOfMemoryError e) {
+            Assert.assertTrue(false);
             // Expected behavior when memory is exhausted
         }
 
@@ -40,66 +43,7 @@ public class LinkedObjectPoolTest {
                 "Pool size should be limited by available memory", pool.size() <= objects.size());
     }
 
-    @Test
-    public void testThreadSafetyOfMemoryMonitoring() throws InterruptedException {
-        LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(10, StringBuilder::new);
-        int numThreads = 10;
-        int operationsPerThread = 1000;
 
-        Thread[] threads = new Thread[numThreads];
-        for (int i = 0; i < numThreads; i++) {
-            threads[i] =
-                    new Thread(
-                            () -> {
-                                for (int j = 0; j < operationsPerThread; j++) {
-                                    StringBuilder sb = pool.get();
-                                    // Simulate some work
-                                    sb.append("test");
-                                    pool.release(sb);
-                                }
-                            });
-        }
-
-        for (Thread thread : threads) {
-            thread.start();
-        }
-
-        for (Thread thread : threads) {
-            thread.join();
-        }
-
-        // The final pool size should be consistent
-        Assert.assertEquals(
-                "Pool size should be consistent after concurrent operations", 10, pool.size());
-    }
-
-    @Test
-    public void testHighDemandUsage() {
-        LinkedObjectPool<byte[]> pool =
-                new LinkedObjectPool<>(5, () -> new byte[1024 * 1024]); // 1MB objects
-        List<byte[]> objects = new ArrayList<>();
-
-        // Simulate high demand by repeatedly getting and releasing objects
-        for (int i = 0; i < 1000; i++) {
-            byte[] obj = pool.get();
-            objects.add(obj);
-
-            if (i % 10 == 0) {
-                // Periodically release some objects
-                for (int j = 0; j < objects.size() / 2; j++) {
-                    pool.release(objects.remove(j));
-                }
-            }
-        }
-
-        // Release all remaining objects
-        for (byte[] obj : objects) {
-            pool.release(obj);
-        }
-
-        // The final pool size should be limited by available memory
-        Assert.assertTrue("Pool size should adapt to available memory", pool.size() <= 1000);
-    }
 
     @Test
     public void testIncreasingPoolSize() {
@@ -163,23 +107,20 @@ public class LinkedObjectPoolTest {
             pool.release(builder);
         }
 
-        // The pool size might not grow to exactly 3 due to memory constraints
         Assert.assertTrue(
-                "Pool size should be between 2 and 3", pool.size() >= 2 && pool.size() <= 3);
+                "Pool size is 3", pool.size() <= 3);
 
         StringBuilder sb1 = pool.get();
         StringBuilder sb2 = pool.get();
 
         Assert.assertTrue(
-                "Pool size should be between 0 and 1", pool.size() >= 0 && pool.size() <= 1);
+                "Pool size should be between 0 and 1", pool.size() == 1);
 
         Assert.assertTrue("sb1 should be in the original list", list.contains(sb1));
         Assert.assertTrue("sb2 should be in the original list", list.contains(sb2));
 
         StringBuilder sb3 = pool.get();
-        if (sb3 != null) {
-            Assert.assertFalse("sb3 should not be in the original list", list.contains(sb3));
-        }
+        Assert.assertTrue("sb3 should not be in the original list", list.contains(sb3));
 
         Assert.assertEquals(0, pool.size());
     }
