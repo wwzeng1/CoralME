@@ -105,7 +105,7 @@ public final class LinkedObjectPool<E> implements ObjectPool<E>, MemoryCallback 
      *
      * @param isMemoryAvailable the current available memory
      */
-    public void isMemoryAvailable(boolean isMemoryAvailable) {
+    public void updateIsMemoryAvailable(boolean isMemoryAvailable) {
          this.isMemoryAvailable = isMemoryAvailable;
     }
 

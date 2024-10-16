@@ -8,13 +8,16 @@ import java.lang.management.MemoryUsage;
  * A utility class that monitors memory usage and updates a callback with the current
  * available memory status.
  */
-class MemoryMonitor {
+public final class MemoryMonitor {
+
     private final MemoryCallback callback;
-    private final MemoryMXBean memoryMXBean;
-    private volatile boolean running;
-    private Thread monitorThread;
-    private final long minMemory;
     private final long frequency;
+
+    private final MemoryMXBean memoryMXBean;
+    private final long minMemory;
+
+    private Thread monitorThread;
+    private volatile boolean running;
 
 
     /**
@@ -22,16 +25,15 @@ class MemoryMonitor {
      *
      * @param callback the MemoryCallback to update with memory information
      * @param percentage the minimum percentage of memory that should be available
+     * @param frequency the frequency at which to check memory usage, in milliseconds
      */
     MemoryMonitor(MemoryCallback callback, double percentage, long frequency) {
         this.callback = callback;
         this.memoryMXBean = ManagementFactory.getMemoryMXBean();
+        this.frequency = frequency;
 
         MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
         this.minMemory = (long)((heapMemoryUsage.getMax() - heapMemoryUsage.getUsed()) * percentage);
-        this.frequency = frequency;
-
-        this.running = true;
     }
 
     /** Starts the memory monitoring thread. */
@@ -39,27 +41,29 @@ class MemoryMonitor {
         monitorThread = new Thread(this::monitorMemory);
         monitorThread.setDaemon(true);
         monitorThread.start();
+        running = true;
+
     }
 
     /** Stops the memory monitoring thread. */
     void stopMonitoring() {
-        running = false;
         monitorThread.interrupt();
+        running = false;
     }
 
     private void monitorMemory() {
+
         while (running && !Thread.currentThread().isInterrupted()) {
 
             MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
             long availableMemory = heapMemoryUsage.getMax() - heapMemoryUsage.getUsed();
-            callback.isMemoryAvailable(availableMemory > minMemory);
+            callback.updateIsMemoryAvailable(availableMemory > minMemory);
 
             try {
-                Thread.sleep(1000); // Update every second
+                Thread.sleep(frequency);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
     }
 }
-

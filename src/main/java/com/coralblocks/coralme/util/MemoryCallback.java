@@ -3,7 +3,8 @@ package com.coralblocks.coralme.util;
 /**
  * Interface for objects that can handle memory availability updates.
  */
+@FunctionalInterface
 interface MemoryCallback {
-    void isMemoryAvailable(boolean isAvailable);
+    void updateIsMemoryAvailable(boolean isAvailable);
 }
 
