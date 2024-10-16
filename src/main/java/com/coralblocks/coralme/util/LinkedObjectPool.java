@@ -72,14 +72,13 @@ public class LinkedObjectPool<E> implements ObjectPool<E> {
      */
     @Override
     public final E get() {
-        if (queue.isEmpty()) {
-            if (isMemoryAvailable()) {
-                return supplier.get();
-            } else {
-                return null; // Return null when memory is not available to create a new instance
-            }
+        if (!queue.isEmpty()) {
+            return queue.removeLast();
         }
-        return queue.removeLast();
+        if (isMemoryAvailable()) {
+            return supplier.get();
+        }
+        return null; // Return null when memory is not available to create a new instance
     }
 
     /**
