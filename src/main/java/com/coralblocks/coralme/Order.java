@@ -22,6 +22,13 @@ import com.coralblocks.coralme.util.DoubleUtils;
 
 public class Order {
 
+    public static final class CancelReason extends com.coralblocks.coralme.CancelReason {}
+    public static final class ExecuteSide extends com.coralblocks.coralme.ExecuteSide {}
+    public static final class RejectReason extends com.coralblocks.coralme.RejectReason {}
+    public static final class Side extends com.coralblocks.coralme.Side {}
+    public static final class TimeInForce extends com.coralblocks.coralme.TimeInForce {}
+    public static final class Type extends com.coralblocks.coralme.Type {}
+
 	final static String EMPTY_CLIENT_ORDER_ID = "NULL";
 
 	public final static int CLIENT_ORDER_ID_MAX_LENGTH = 64;
@@ -357,6 +364,7 @@ public class Order {
         for(int i = x - 1; i >= 0; i--) {
 
         	listeners.get(i).onOrderRejected(time, this, reason);
+
         }
 
         listeners.clear();
