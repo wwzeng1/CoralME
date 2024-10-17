@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2023 (c) CoralBlocks - http://www.coralblocks.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +15,6 @@
  */
 package com.coralblocks.coralme;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import com.coralblocks.coralme.CancelReason;
-import com.coralblocks.coralme.ExecuteSide;
-import com.coralblocks.coralme.RejectReason;
-import com.coralblocks.coralme.Side;
-import com.coralblocks.coralme.TimeInForce;
-import com.coralblocks.coralme.Type;
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.LinkedObjectPool;
 import com.coralblocks.coralme.util.LongMap;
@@ -32,876 +22,970 @@ import com.coralblocks.coralme.util.ObjectPool;
 import com.coralblocks.coralme.util.SystemTimestamper;
 import com.coralblocks.coralme.util.Timestamper;
 
-package com.coralblocks.coralme;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import com.coralblocks.coralme.util.DoubleUtils;
-import com.coralblocks.coralme.util.LinkedObjectPool;
-import com.coralblocks.coralme.util.LongMap;
-import com.coralblocks.coralme.util.ObjectPool;
-import com.coralblocks.coralme.util.SystemTimestamper;
-import com.coralblocks.coralme.util.Timestamper;
 
 public class OrderBook implements OrderListener {
 
-	private static final boolean DEFAULT_ALLOW_TRADE_TO_SELF = true;
+    private static final boolean DEFAULT_ALLOW_TRADE_TO_SELF = true;
 
-	private static final Timestamper TIMESTAMPER = new SystemTimestamper();
+    private static final Timestamper TIMESTAMPER = new SystemTimestamper();
 
-	public static enum State { NORMAL, LOCKED, CROSSED, ONESIDED, EMPTY }
+    public static enum State {
+        NORMAL,
+        LOCKED,
+        CROSSED,
+        ONESIDED,
+        EMPTY
+    }
 
-	private final ObjectPool<Order> orderPool = new LinkedObjectPool<Order>(8, Order.class);
+    private final ObjectPool<Order> orderPool = new LinkedObjectPool<Order>(8, Order.class);
 
-	private final ObjectPool<PriceLevel> priceLevelPool = new LinkedObjectPool<PriceLevel>(8, PriceLevel.class);
+    private final ObjectPool<PriceLevel> priceLevelPool =
+            new LinkedObjectPool<PriceLevel>(8, PriceLevel.class);
 
-	private long execId = 0;
+    private long execId = 0;
 
-	private long matchId = 0;
+    private long matchId = 0;
 
-	private PriceLevel[] head = new PriceLevel[2];
+    private PriceLevel[] head = new PriceLevel[2];
 
-	private PriceLevel[] tail = new PriceLevel[2];
+    private PriceLevel[] tail = new PriceLevel[2];
 
-	private int[] levels = new int[] { 0, 0 };
+    private int[] levels = new int[] {0, 0};
 
-	private final LongMap<Order> orders = new LongMap<Order>();
+    private final LongMap<Order> orders = new LongMap<Order>();
 
-	private final String security;
+    private final String security;
 
-	private long lastExecutedPrice = Long.MAX_VALUE;
+    private long lastExecutedPrice = Long.MAX_VALUE;
 
-	private final List<OrderBookListener> listeners = new ArrayList<OrderBookListener>(8);
+    private final List<OrderBookListener> listeners = new ArrayList<OrderBookListener>(8);
 
-	private final Timestamper timestamper;
+    private final Timestamper timestamper;
 
-	private final boolean allowTradeToSelf;
+    private final boolean allowTradeToSelf;
 
+    public OrderBook(String security, boolean allowTradeToSelf) {
+        this(security, TIMESTAMPER, null, allowTradeToSelf);
+    }
 
-	public OrderBook(String security, boolean allowTradeToSelf) {
-		this(security, TIMESTAMPER, null, allowTradeToSelf);
-	}
+    public OrderBook(String security) {
+        this(security, TIMESTAMPER, null);
+    }
 
-	public OrderBook(String security) {
-		this(security, TIMESTAMPER, null);
-	}
+    public OrderBook(String security, Timestamper timestamper, boolean allowTradeToSelf) {
+        this(security, timestamper, null, allowTradeToSelf);
+    }
 
-	public OrderBook(String security, Timestamper timestamper, boolean allowTradeToSelf) {
-		this(security, timestamper, null, allowTradeToSelf);
-	}
+    public OrderBook(String security, Timestamper timestamper) {
+        this(security, timestamper, null);
+    }
 
-	public OrderBook(String security, Timestamper timestamper) {
-		this(security, timestamper, null);
-	}
+    public OrderBook(String security, OrderBookListener listener, boolean allowTradeToSelf) {
+        this(security, TIMESTAMPER, listener, allowTradeToSelf);
+    }
 
-	public OrderBook(String security, OrderBookListener listener, boolean allowTradeToSelf) {
-		this(security, TIMESTAMPER, listener, allowTradeToSelf);
-	}
+    public OrderBook(String security, OrderBookListener listener) {
+        this(security, TIMESTAMPER, listener);
+    }
 
-	public OrderBook(String security, OrderBookListener listener) {
-		this(security, TIMESTAMPER, listener);
-	}
+    public OrderBook(String security, Timestamper timestamper, OrderBookListener listener) {
+        this(security, timestamper, listener, DEFAULT_ALLOW_TRADE_TO_SELF);
+    }
 
-	public OrderBook(String security, Timestamper timestamper, OrderBookListener listener) {
-		this(security, timestamper, listener, DEFAULT_ALLOW_TRADE_TO_SELF);
-	}
+    public OrderBook(OrderBook orderBook) {
+        this(
+                orderBook.getSecurity(),
+                orderBook.getTimestamper(),
+                null,
+                orderBook.isAllowTradeToSelf());
+        List<OrderBookListener> listeners = orderBook.getListeners();
+        for (int i = 0; i < listeners.size(); i++) {
+            addListener(listeners.get(i));
+        }
+    }
 
-	public OrderBook(OrderBook orderBook) {
-		this(orderBook.getSecurity(), orderBook.getTimestamper(), null, orderBook.isAllowTradeToSelf());
-		 List<OrderBookListener> listeners = orderBook.getListeners();
-		 for(int i = 0; i < listeners.size(); i++) {
-			 addListener(listeners.get(i));
-		 }
-	}
+    public OrderBook(
+            String security,
+            Timestamper timestamper,
+            OrderBookListener listener,
+            boolean allowTradeToSelf) {
 
-	public OrderBook(String security, Timestamper timestamper, OrderBookListener listener, boolean allowTradeToSelf) {
+        this.security = security;
 
-		this.security = security;
+        this.timestamper = timestamper;
 
-		this.timestamper = timestamper;
+        this.allowTradeToSelf = allowTradeToSelf;
 
-		this.allowTradeToSelf = allowTradeToSelf;
+        if (listener != null) listeners.add(listener);
+    }
 
-		if (listener != null) listeners.add(listener);
-	}
+    public void addListener(OrderBookListener listener) {
+        if (!listeners.contains(listener)) listeners.add(listener);
+    }
 
-	public void addListener(OrderBookListener listener) {
-		if (!listeners.contains(listener)) listeners.add(listener);
-	}
+    public void removeListener(OrderBookListener listener) {
+        listeners.remove(listener);
+    }
 
-	public void removeListener(OrderBookListener listener) {
-		listeners.remove(listener);
-	}
+    public List<OrderBookListener> getListeners() {
+        return listeners;
+    }
 
-	public List<OrderBookListener> getListeners() {
-		return listeners;
-	}
+    public final boolean isAllowTradeToSelf() {
+        return allowTradeToSelf;
+    }
 
-	public final boolean isAllowTradeToSelf() {
-		return allowTradeToSelf;
-	}
+    public Timestamper getTimestamper() {
+        return timestamper;
+    }
 
-	public Timestamper getTimestamper() {
-		return timestamper;
-	}
+    public String getSecurity() {
 
-	public String getSecurity() {
+        return security;
+    }
 
-		return security;
-	}
+    public final Order getBestBidOrder() {
 
-	public final Order getBestBidOrder() {
+        if (!hasBids()) return null;
 
-		if (!hasBids()) return null;
+        PriceLevel pl = head(Side.BUY);
 
-		PriceLevel pl = head(Side.BUY);
+        return pl.head();
+    }
 
-		return pl.head();
-	}
+    public final Order getBestAskOrder() {
 
-	public final Order getBestAskOrder() {
+        if (!hasAsks()) return null;
 
-		if (!hasAsks()) return null;
+        PriceLevel pl = head(Side.SELL);
 
-		PriceLevel pl = head(Side.SELL);
+        return pl.head();
+    }
 
-		return pl.head();
-	}
+    public final LongMap<Order> getOrders() {
+        return orders;
+    }
 
-	public final LongMap<Order> getOrders() {
-		return orders;
-	}
+    public final Order getOrder(long id) {
 
-	public final Order getOrder(long id) {
+        return orders.get(id);
+    }
 
-		return orders.get(id);
-	}
+    public final int getNumberOfOrders() {
 
-	public final int getNumberOfOrders() {
+        return orders.size();
+    }
 
-		return orders.size();
-	}
+    public final boolean isEmpty() {
 
-	public final boolean isEmpty() {
+        return orders.isEmpty();
+    }
 
-		return orders.isEmpty();
-	}
+    public final PriceLevel head(Side side) {
 
-	public final PriceLevel head(Side side) {
+        return head[side.index()];
+    }
 
-		return head[side.index()];
-	}
+    public final PriceLevel tail(Side side) {
 
-	public final PriceLevel tail(Side side) {
+        return tail[side.index()];
+    }
 
-		return tail[side.index()];
-	}
+    public long getLastExecutedPrice() {
 
-	public long getLastExecutedPrice() {
+        return lastExecutedPrice;
+    }
 
-		return lastExecutedPrice;
-	}
+    public final boolean hasSpread() {
+        return hasBestBid() && hasBestAsk();
+    }
 
-	public final boolean hasSpread() {
-		return hasBestBid() && hasBestAsk();
-	}
+    public final long getSpread() {
 
-	public final long getSpread() {
+        PriceLevel bestBid = head[Side.BUY.index()];
 
-		PriceLevel bestBid = head[Side.BUY.index()];
+        PriceLevel bestAsk = head[Side.SELL.index()];
 
-		PriceLevel bestAsk = head[Side.SELL.index()];
+        assert bestBid != null && bestAsk != null;
 
-		assert bestBid != null && bestAsk != null;
+        return bestAsk.getPrice() - bestBid.getPrice();
+    }
 
-		return bestAsk.getPrice() - bestBid.getPrice();
-	}
+    public final State getState() {
 
-	public final State getState() {
+        PriceLevel bestBid = head[Side.BUY.index()];
 
-		PriceLevel bestBid = head[Side.BUY.index()];
+        PriceLevel bestAsk = head[Side.SELL.index()];
 
-		PriceLevel bestAsk = head[Side.SELL.index()];
+        if (bestBid != null && bestAsk != null) {
 
-		if (bestBid != null && bestAsk != null) {
+            long spread = bestAsk.getPrice() - bestBid.getPrice();
 
-			long spread = bestAsk.getPrice() - bestBid.getPrice();
+            if (spread == 0) return State.LOCKED;
 
-			if (spread == 0) return State.LOCKED;
+            if (spread < 0) return State.CROSSED;
 
-			if (spread < 0) return State.CROSSED;
+            return State.NORMAL;
 
-			return State.NORMAL;
+        } else if (bestBid == null && bestAsk == null) {
 
-		} else if (bestBid == null && bestAsk == null) {
+            return State.EMPTY;
 
-			return State.EMPTY;
+        } else {
 
-		} else {
+            return State.ONESIDED;
+        }
+    }
 
-			return State.ONESIDED;
-		}
-	}
+    public final boolean hasTop(Side side) {
 
-	public final boolean hasTop(Side side) {
+        return side.isBuy() ? hasBestBid() : hasBestAsk();
+    }
 
-		return side.isBuy() ? hasBestBid() : hasBestAsk();
-	}
+    public final boolean hasAsks() {
+        return hasBestAsk();
+    }
 
-	public final boolean hasAsks() {
-		return hasBestAsk();
-	}
+    public final boolean hasBids() {
+        return hasBestBid();
+    }
 
-	public final boolean hasBids() {
-		return hasBestBid();
-	}
+    public final boolean hasBestBid() {
 
-	public final boolean hasBestBid() {
+        return head[Side.BUY.index()] != null;
+    }
 
-		return head[Side.BUY.index()] != null;
-	}
+    public final boolean hasBestAsk() {
 
-	public final boolean hasBestAsk() {
+        return head[Side.SELL.index()] != null;
+    }
 
-		return head[Side.SELL.index()] != null;
-	}
+    public final long getBestPrice(Side side) {
 
-	public final long getBestPrice(Side side) {
+        return side.isBuy() ? getBestBidPrice() : getBestAskPrice();
+    }
 
-		return side.isBuy() ? getBestBidPrice() : getBestAskPrice();
-	}
+    public final long getBestBidPrice() {
 
-	public final long getBestBidPrice() {
+        int index = Side.BUY.index();
 
-		int index = Side.BUY.index();
+        assert head[index] != null;
 
-		assert head[index] != null;
+        return head[index].getPrice();
+    }
 
-		return head[index].getPrice();
-	}
+    public final long getBestAskPrice() {
 
-	public final long getBestAskPrice() {
+        int index = Side.SELL.index();
 
-		int index = Side.SELL.index();
+        assert head[index] != null;
 
-		assert head[index] != null;
+        return head[index].getPrice();
+    }
 
-		return head[index].getPrice();
-	}
+    public final long getBestSize(Side side) {
 
-	public final long getBestSize(Side side) {
+        return side.isBuy() ? getBestBidSize() : getBestAskSize();
+    }
 
-		return side.isBuy() ? getBestBidSize() : getBestAskSize();
-	}
+    public final long getBestBidSize() {
 
-	public final long getBestBidSize() {
+        int index = Side.BUY.index();
 
-		int index = Side.BUY.index();
+        assert head[index] != null;
 
-		assert head[index] != null;
+        return head[index].getSize();
+    }
 
-		return head[index].getSize();
-	}
+    public final long getBestAskSize() {
 
-	public final long getBestAskSize() {
+        int index = Side.SELL.index();
 
-		int index = Side.SELL.index();
+        assert head[index] != null;
 
-		assert head[index] != null;
+        return head[index].getSize();
+    }
 
-		return head[index].getSize();
-	}
+    public final int getLevels(Side side) {
 
-	public final int getLevels(Side side) {
+        return side.isBuy() ? getBidLevels() : getAskLevels();
+    }
 
-		return side.isBuy() ? getBidLevels() : getAskLevels();
-	}
+    public final int getBidLevels() {
 
-	public final int getBidLevels() {
+        return levels[Side.BUY.index()];
+    }
 
-		return levels[Side.BUY.index()];
-	}
+    public final int getAskLevels() {
 
-	public final int getAskLevels() {
+        return levels[Side.SELL.index()];
+    }
 
-		return levels[Side.SELL.index()];
-	}
+    public void showOrders() {
+        System.out.println(orders());
+    }
 
-	public void showOrders() {
-		System.out.println(orders());
-	}
+    public void showLevels() {
+        System.out.println(levels());
+    }
 
-	public void showLevels() {
-		System.out.println(levels());
-	}
+    public String levels() {
+        StringBuilder sb = new StringBuilder(1024);
+        levels(sb);
+        return sb.toString();
+    }
 
-	public String levels() {
-		StringBuilder sb = new StringBuilder(1024);
-		levels(sb);
-		return sb.toString();
-	}
+    public String orders() {
+        StringBuilder sb = new StringBuilder(1024);
+        orders(sb);
+        return sb.toString();
+    }
 
-	public String orders() {
-		StringBuilder sb = new StringBuilder(1024);
-		orders(sb);
-		return sb.toString();
-	}
+    public void levels(StringBuilder sb, Side side) {
 
-	public void levels(StringBuilder sb, Side side) {
+        if (side == Side.SELL) {
 
-		if (side == Side.SELL) {
+            if (!hasAsks()) {
+                return;
+            }
 
-			if (!hasAsks()) {
-				return;
-			}
+            for (PriceLevel pl = head[side.index()]; pl != null; pl = pl.next) {
 
-			for(PriceLevel pl = head[side.index()]; pl != null; pl = pl.next) {
+                String size = String.format("%6d", pl.getSize());
+                String price = String.format("%9.2f", DoubleUtils.toDouble(pl.getPrice()));
 
-				String size = String.format("%6d", pl.getSize());
-				String price = String.format("%9.2f", DoubleUtils.toDouble(pl.getPrice()));
+                sb.append(size).append(" @ ").append(price);
+                sb.append(" (orders=").append(pl.getOrders()).append(")\n");
+            }
 
-				sb.append(size).append(" @ ").append(price);
-				sb.append(" (orders=").append(pl.getOrders()).append(")\n");
-			}
+        } else {
 
-		} else {
+            if (!hasBids()) {
+                return;
+            }
 
-			if (!hasBids()) {
-				return;
-			}
+            for (PriceLevel pl = tail[side.index()]; pl != null; pl = pl.prev) {
 
-			for(PriceLevel pl = tail[side.index()]; pl != null; pl = pl.prev) {
+                String size = String.format("%6d", pl.getSize());
+                String price = String.format("%9.2f", DoubleUtils.toDouble(pl.getPrice()));
 
-				String size = String.format("%6d", pl.getSize());
-				String price = String.format("%9.2f", DoubleUtils.toDouble(pl.getPrice()));
+                sb.append(size).append(" @ ").append(price);
+                sb.append(" (orders=").append(pl.getOrders()).append(")\n");
+            }
+        }
+    }
 
-				sb.append(size).append(" @ ").append(price);
-				sb.append(" (orders=").append(pl.getOrders()).append(")\n");
-			}
-		}
-	}
+    public void orders(StringBuilder sb, Side side) {
 
-	public void orders(StringBuilder sb, Side side) {
+        if (side == Side.SELL) {
 
-		if (side == Side.SELL) {
+            if (!hasAsks()) {
+                return;
+            }
 
-			if (!hasAsks()) {
-				return;
-			}
+            for (PriceLevel pl = head[side.index()]; pl != null; pl = pl.next) {
 
-			for(PriceLevel pl = head[side.index()]; pl != null; pl = pl.next) {
+                for (Order o = pl.head(); o != null; o = o.next) {
 
-				for(Order o = pl.head(); o != null; o = o.next) {
+                    String size = String.format("%6d", o.getOpenSize());
+                    String price = String.format("%9.2f", DoubleUtils.toDouble(o.getPrice()));
 
-					String size = String.format("%6d", o.getOpenSize());
-					String price = String.format("%9.2f", DoubleUtils.toDouble(o.getPrice()));
+                    sb.append(size).append(" @ ").append(price);
+                    sb.append(" (id=").append(o.getId()).append(")\n");
+                }
+            }
 
-					sb.append(size).append(" @ ").append(price);
-					sb.append(" (id=").append(o.getId()).append(")\n");
-				}
-			}
+        } else {
 
-		} else {
+            if (!hasBids()) {
+                return;
+            }
 
-			if (!hasBids()) {
-				return;
-			}
+            for (PriceLevel pl = tail[side.index()]; pl != null; pl = pl.prev) {
 
-			for(PriceLevel pl = tail[side.index()]; pl != null; pl = pl.prev) {
+                for (Order o = pl.head(); o != null; o = o.next) {
 
-				for(Order o = pl.head(); o != null; o = o.next) {
+                    String size = String.format("%6d", o.getOpenSize());
+                    String price = String.format("%9.2f", DoubleUtils.toDouble(o.getPrice()));
 
-					String size = String.format("%6d", o.getOpenSize());
-					String price = String.format("%9.2f", DoubleUtils.toDouble(o.getPrice()));
+                    sb.append(size).append(" @ ").append(price);
+                    sb.append(" (id=").append(o.getId()).append(")\n");
+                }
+            }
+        }
+    }
 
-					sb.append(size).append(" @ ").append(price);
-					sb.append(" (id=").append(o.getId()).append(")\n");
-				}
-			}
-		}
-	}
+    public void orders(StringBuilder sb) {
 
-	public void orders(StringBuilder sb) {
+        if (hasBids()) orders(sb, Side.BUY);
+        if (hasSpread()) {
+            sb.append("-------- ");
+            String spread = String.format("%9.2f", DoubleUtils.toDouble(getSpread()));
+            sb.append(spread).append('\n');
+        } else {
+            sb.append("-------- \n");
+        }
+        if (hasAsks()) orders(sb, Side.SELL);
+    }
 
-		if (hasBids()) orders(sb, Side.BUY);
-		if (hasSpread()) {
-			sb.append("-------- ");
-			String spread = String.format("%9.2f", DoubleUtils.toDouble(getSpread()));
-			sb.append(spread).append('\n');
-		} else {
-			sb.append("-------- \n");
-		}
-		if (hasAsks()) orders(sb, Side.SELL);
-	}
+    public void levels(StringBuilder sb) {
 
-	public void levels(StringBuilder sb) {
+        if (hasBids()) levels(sb, Side.BUY);
+        if (hasSpread()) {
+            sb.append("-------- ");
+            String spread = String.format("%9.2f", DoubleUtils.toDouble(getSpread()));
+            sb.append(spread).append('\n');
+        } else {
+            sb.append("-------- \n");
+        }
+        if (hasAsks()) levels(sb, Side.SELL);
+    }
 
-		if (hasBids()) levels(sb, Side.BUY);
-		if (hasSpread()) {
-			sb.append("-------- ");
-			String spread = String.format("%9.2f", DoubleUtils.toDouble(getSpread()));
-			sb.append(spread).append('\n');
-		} else {
-			sb.append("-------- \n");
-		}
-		if (hasAsks()) levels(sb, Side.SELL);
-	}
+    private final void match(Order order) {
 
-	private final void match(Order order) {
+        int index =
+                order.getSide()
+                        .invertedIndex(); // NOTE: Inverted because bid hits ask and vice-versa
 
-		int index = order.getSide().invertedIndex(); // NOTE: Inverted because bid hits ask and vice-versa
+        OUTER:
+        for (PriceLevel pl = head[index]; pl != null; pl = pl.next) {
 
-		OUTER:
-		for(PriceLevel pl = head[index]; pl != null; pl = pl.next) {
+            if (order.getType() != Type.MARKET
+                    && order.getSide().isOutside(order.getPrice(), pl.getPrice())) break;
 
-			if (order.getType() != Type.MARKET && order.getSide().isOutside(order.getPrice(), pl.getPrice())) break;
+            for (Order o = pl.head(); o != null; o = o.next) {
 
-			for(Order o = pl.head(); o != null; o = o.next) {
+                if (!allowTradeToSelf && o.getClientId() == order.getClientId()) continue;
 
-				if (!allowTradeToSelf && o.getClientId() == order.getClientId()) continue;
+                long sizeToExecute = Math.min(order.getOpenSize(), o.getOpenSize());
 
-				long sizeToExecute = Math.min(order.getOpenSize(), o.getOpenSize());
+                long priceExecuted = o.getPrice(); // always price improve the taker
 
-				long priceExecuted = o.getPrice(); // always price improve the taker
+                long ts = timestamper.nanoEpoch();
 
-				long ts = timestamper.nanoEpoch();
+                lastExecutedPrice = priceExecuted;
 
-				lastExecutedPrice = priceExecuted;
+                long execId1 = ++execId;
+                long execId2 = ++execId;
+                long matchId = ++this.matchId;
 
-				long execId1 = ++execId;
-				long execId2 = ++execId;
-				long matchId = ++this.matchId;
+                o.execute(
+                        ts,
+                        ExecuteSide.MAKER,
+                        sizeToExecute,
+                        priceExecuted,
+                        execId1,
+                        matchId); // notify the maker first?
 
-				o.execute(ts, ExecuteSide.MAKER, sizeToExecute, priceExecuted, execId1, matchId); // notify the maker first?
+                order.execute(
+                        ts, ExecuteSide.TAKER, sizeToExecute, priceExecuted, execId2, matchId);
 
-				order.execute(ts, ExecuteSide.TAKER, sizeToExecute, priceExecuted, execId2, matchId);
+                if (order.isTerminal()) {
 
-				if (order.isTerminal()) {
+                    break OUTER;
+                }
+            }
+        }
+    }
 
-					break OUTER;
-				}
-			}
-		}
-	}
+    private final PriceLevel findPriceLevel(Side side, long price) {
 
-	private final PriceLevel findPriceLevel(Side side, long price) {
+        PriceLevel foundPriceLevel = null;
 
-		PriceLevel foundPriceLevel = null;
+        int index = side.index();
 
-		int index = side.index();
+        for (PriceLevel pl = head[index]; pl != null; pl = pl.next) {
 
-		for(PriceLevel pl = head[index]; pl != null; pl = pl.next) {
+            if (side.isInside(price, pl.getPrice())) {
 
-			if (side.isInside(price, pl.getPrice())) {
+                foundPriceLevel = pl;
 
-				foundPriceLevel = pl;
+                break;
+            }
+        }
 
-				break;
-			}
-		}
+        PriceLevel priceLevel;
 
-		PriceLevel priceLevel;
+        if (foundPriceLevel == null) {
 
-		if (foundPriceLevel == null) {
+            priceLevel = priceLevelPool.get();
 
-			priceLevel = priceLevelPool.get();
+            priceLevel.init(security, side, price);
 
-			priceLevel.init(security, side, price);
+            levels[index]++;
 
-			levels[index]++;
+            if (head[index] == null) {
 
-			if (head[index] == null) {
+                head[index] = tail[index] = priceLevel;
 
-				head[index] = tail[index] = priceLevel;
+                priceLevel.next = priceLevel.prev = null;
 
-				priceLevel.next = priceLevel.prev = null;
+            } else {
 
-			} else {
+                tail[index].next = priceLevel;
 
-				tail[index].next = priceLevel;
+                priceLevel.prev = tail[index];
 
-				priceLevel.prev = tail[index];
+                priceLevel.next = null;
 
-				priceLevel.next = null;
+                tail[index] = priceLevel;
+            }
 
-				tail[index] = priceLevel;
-			}
+        } else if (foundPriceLevel.getPrice() != price) {
 
-		} else if (foundPriceLevel.getPrice() != price) {
+            priceLevel = priceLevelPool.get();
 
-			priceLevel = priceLevelPool.get();
+            priceLevel.init(security, side, price);
 
+            levels[index]++;
 
-			priceLevel.init(security, side, price);
+            if (foundPriceLevel.prev != null) {
 
-			levels[index]++;
+                foundPriceLevel.prev.next = priceLevel;
 
-			if (foundPriceLevel.prev != null) {
+                priceLevel.prev = foundPriceLevel.prev;
+            }
 
-				foundPriceLevel.prev.next = priceLevel;
+            priceLevel.next = foundPriceLevel;
 
-				priceLevel.prev = foundPriceLevel.prev;
-			}
+            foundPriceLevel.prev = priceLevel;
 
-			priceLevel.next = foundPriceLevel;
+            if (head[index] == foundPriceLevel) {
 
-			foundPriceLevel.prev = priceLevel;
+                head[index] = priceLevel;
+            }
 
-			if (head[index] == foundPriceLevel) {
+        } else {
 
-				head[index] = priceLevel;
-			}
+            priceLevel = foundPriceLevel;
+        }
 
-		} else {
+        return priceLevel;
+    }
 
-			priceLevel = foundPriceLevel;
-		}
+    public Order createLimit(
+            long clientId,
+            CharSequence clientOrderId,
+            long exchangeOrderId,
+            Side side,
+            long size,
+            double price,
+            TimeInForce tif) {
+        return createLimit(
+                clientId,
+                clientOrderId,
+                exchangeOrderId,
+                side,
+                size,
+                DoubleUtils.toLong(price),
+                tif);
+    }
 
-		return priceLevel;
-	}
+    public Order createLimit(
+            long clientId,
+            CharSequence clientOrderId,
+            long exchangeOrderId,
+            Side side,
+            long size,
+            long price,
+            TimeInForce tif) {
+        return createOrder(
+                clientId, clientOrderId, exchangeOrderId, side, size, price, Type.LIMIT, tif);
+    }
 
-	public Order createLimit(long clientId, CharSequence clientOrderId, long exchangeOrderId, Side side, long size, double price, TimeInForce tif) {
-		return createLimit(clientId, clientOrderId, exchangeOrderId, side, size, DoubleUtils.toLong(price), tif);
-	}
+    public Order createMarket(
+            long clientId, CharSequence clientOrderId, long exchangeOrderId, Side side, long size) {
+        return createOrder(
+                clientId, clientOrderId, exchangeOrderId, side, size, 0, Type.MARKET, null);
+    }
 
-	public Order createLimit(long clientId, CharSequence clientOrderId, long exchangeOrderId, Side side, long size, long price, TimeInForce tif) {
-		return createOrder(clientId, clientOrderId, exchangeOrderId, side, size, price, Type.LIMIT, tif);
-	}
+    protected RejectReason validateOrder(Order order) {
+        return null;
+    }
 
-	public Order createMarket(long clientId, CharSequence clientOrderId, long exchangeOrderId, Side side, long size) {
-		return createOrder(clientId, clientOrderId, exchangeOrderId, side, size, 0, Type.MARKET, null);
-	}
+    private final Order fillOrCancel(Order order, long exchangeOrderId) {
 
-	protected RejectReason validateOrder(Order order) {
-		return null;
-	}
+        Type type = order.getType();
 
-	private final Order fillOrCancel(Order order, long exchangeOrderId) {
+        if (type == Type.MARKET && order.getPrice() != 0) {
 
-		Type type = order.getType();
+            order.reject(
+                    timestamper.nanoEpoch(),
+                    RejectReason
+                            .BAD_PRICE); // remember... the OrderListener callback will return the
+                                         // order to the pool...
 
-		if (type == Type.MARKET && order.getPrice() != 0) {
+            return order;
+        }
 
-			order.reject(timestamper.nanoEpoch(), RejectReason.BAD_PRICE); // remember... the OrderListener callback will return the order to the pool...
+        RejectReason rejectReason = validateOrder(order);
 
-			return order;
-		}
+        if (rejectReason != null) {
 
-		RejectReason rejectReason = validateOrder(order);
+            order.reject(
+                    timestamper.nanoEpoch(),
+                    rejectReason); // remember... the OrderListener callback will return the order
+                                   // to the pool...
 
-		if (rejectReason != null) {
+            return order;
+        }
 
-			order.reject(timestamper.nanoEpoch(), rejectReason); // remember... the OrderListener callback will return the order to the pool...
+        // always accept first...
+        order.accept(timestamper.nanoEpoch(), exchangeOrderId);
 
-			return order;
-		}
+        // walk through the book matching:
 
-		// always accept first...
-		order.accept(timestamper.nanoEpoch(), exchangeOrderId);
+        match(order);
 
-		// walk through the book matching:
+        // check if there is quantity left that needs to be canceled:
 
-		match(order);
+        if (!order.isTerminal()) {
 
-		// check if there is quantity left that needs to be canceled:
+            if (type == Type.MARKET) {
 
-		if (!order.isTerminal()) {
+                order.cancel(timestamper.nanoEpoch(), CancelReason.NO_LIQUIDITY);
 
-			if (type == Type.MARKET) {
+            } else {
 
-				order.cancel(timestamper.nanoEpoch(), CancelReason.NO_LIQUIDITY);
+                CancelReason cancelReason = CancelReason.MISSED;
 
-			} else {
+                if (!hasTop(order.getOtherSide())) {
+                    cancelReason = CancelReason.NO_LIQUIDITY;
+                }
 
-				CancelReason cancelReason = CancelReason.MISSED;
+                order.cancel(timestamper.nanoEpoch(), cancelReason);
+            }
+        }
 
-				if (!hasTop(order.getOtherSide())) {
-					cancelReason = CancelReason.NO_LIQUIDITY;
-				}
+        return order;
+    }
 
-				order.cancel(timestamper.nanoEpoch(), cancelReason);
-			}
-		}
+    private Order fillOrRest(Order order, long exchangeOrderId) {
 
-		return order;
-	}
+        RejectReason rejectReason = validateOrder(order);
 
-	private Order fillOrRest(Order order, long exchangeOrderId) {
+        if (rejectReason != null) {
 
-		RejectReason rejectReason = validateOrder(order);
+            order.reject(
+                    timestamper.nanoEpoch(),
+                    rejectReason); // remember... the OrderListener callback will return the order
+                                   // to the pool...
 
-		if (rejectReason != null) {
+            return order;
+        }
 
-			order.reject(timestamper.nanoEpoch(), rejectReason); // remember... the OrderListener callback will return the order to the pool...
+        // always accept first:
+        order.accept(timestamper.nanoEpoch(), exchangeOrderId);
 
-			return order;
-		}
+        // something needs to be executed first...
 
-		// always accept first:
-		order.accept(timestamper.nanoEpoch(), exchangeOrderId);
+        match(order);
 
-		// something needs to be executed first...
+        if (order.isTerminal()) {
 
-		match(order);
+            return order;
+        }
 
-		if (order.isTerminal()) {
+        // rest the remaining in the book:
+        // but first check if it will not cross its own order
+        if (!allowTradeToSelf
+                && hasTop(order.getOtherSide())
+                && order.getSide().isInside(order.getPrice(), getBestPrice(order.getOtherSide()))) {
 
-			return order;
-		}
+            CancelReason cancelReason = CancelReason.CROSSED;
 
-		// rest the remaining in the book:
-		// but first check if it will not cross its own order
-		if (!allowTradeToSelf && hasTop(order.getOtherSide()) && order.getSide().isInside(order.getPrice(), getBestPrice(order.getOtherSide()))) {
+            order.cancel(timestamper.nanoEpoch(), cancelReason);
 
-			CancelReason cancelReason = CancelReason.CROSSED;
+        } else {
 
-			order.cancel(timestamper.nanoEpoch(), cancelReason);
+            rest(order);
+        }
 
-		} else {
+        return order;
+    }
 
-			rest(order);
+    final Order createOrder(
+            long clientId,
+            CharSequence clientOrderId,
+            long exchangeOrderId,
+            Side side,
+            long size,
+            long price,
+            Type type,
+            TimeInForce tif) {
 
-		}
+        Order order = getOrder(clientId, clientOrderId, security, side, size, price, type, tif);
 
-		return order;
-	}
+        if (tif == TimeInForce.IOC || type == Type.MARKET) {
 
-	final Order createOrder(long clientId, CharSequence clientOrderId, long exchangeOrderId, Side side, long size, long price, Type type,TimeInForce tif) {
+            return fillOrCancel(order, exchangeOrderId);
 
-		Order order = getOrder(clientId, clientOrderId, security, side, size, price, type, tif);
+        } else {
 
-		if (tif == TimeInForce.IOC || type == Type.MARKET) {
+            return fillOrRest(order, exchangeOrderId);
+        }
+    }
 
-			return fillOrCancel(order, exchangeOrderId);
+    public long rollTo(OrderBook newOrderBook) {
+        return rollTo(newOrderBook, 1);
+    }
 
-		} else {
+    public long rollTo(OrderBook newOrderBook, long firstExchangeOrderId) {
 
-			return fillOrRest(order, exchangeOrderId);
-		}
+        if (hasBids()) {
 
-	}
+            for (PriceLevel pl = head(Side.BUY); pl != null; pl = pl.next) {
 
-	public long rollTo(OrderBook newOrderBook) {
-		return rollTo(newOrderBook, 1);
-	}
+                for (Order o = pl.head(); o != null; o = o.next) {
 
-	public long rollTo(OrderBook newOrderBook, long firstExchangeOrderId) {
+                    if (o.getTimeInForce() != TimeInForce.GTC) continue;
 
-		if (hasBids()) {
+                    newOrderBook.createLimit(
+                            o.getClientId(),
+                            o.getClientOrderId(),
+                            firstExchangeOrderId++,
+                            o.getSide(),
+                            o.getOpenSize(),
+                            o.getPrice(),
+                            TimeInForce.GTC);
 
-			for(PriceLevel pl = head(Side.BUY); pl != null; pl = pl.next) {
+                    o.cancel(timestamper.nanoEpoch(), CancelReason.ROLLED);
+                }
+            }
+        }
 
-				for(Order o = pl.head(); o != null; o = o.next) {
+        if (hasAsks()) {
 
-					if (o.getTimeInForce() != TimeInForce.GTC) continue;
+            for (PriceLevel pl = head(Side.SELL); pl != null; pl = pl.next) {
 
-					newOrderBook.createLimit(o.getClientId(), o.getClientOrderId(), firstExchangeOrderId++, o.getSide(), o.getOpenSize(), o.getPrice(), TimeInForce.GTC);
+                for (Order o = pl.head(); o != null; o = o.next) {
 
-					o.cancel(timestamper.nanoEpoch(), CancelReason.ROLLED);
-				}
-			}
-		}
+                    if (o.getTimeInForce() != TimeInForce.GTC) continue;
 
-		if (hasAsks()) {
+                    newOrderBook.createLimit(
+                            o.getClientId(),
+                            o.getClientOrderId(),
+                            firstExchangeOrderId++,
+                            o.getSide(),
+                            o.getOpenSize(),
+                            o.getPrice(),
+                            TimeInForce.GTC);
 
-			for(PriceLevel pl = head(Side.SELL); pl != null; pl = pl.next) {
+                    o.cancel(timestamper.nanoEpoch(), CancelReason.ROLLED);
+                }
+            }
+        }
 
-				for(Order o = pl.head(); o != null; o = o.next) {
+        return firstExchangeOrderId;
+    }
 
-					if (o.getTimeInForce() != TimeInForce.GTC) continue;
+    public void expire() {
 
-					newOrderBook.createLimit(o.getClientId(), o.getClientOrderId(), firstExchangeOrderId++, o.getSide(), o.getOpenSize(), o.getPrice(), TimeInForce.GTC);
+        Iterator<Order> iter = orders.iterator();
 
-					o.cancel(timestamper.nanoEpoch(), CancelReason.ROLLED);
-				}
-			}
-		}
+        while (iter.hasNext()) {
 
-		return firstExchangeOrderId;
-	}
+            Order order = iter.next();
 
-	public void expire() {
+            assert order.isTerminal() == false;
 
-		Iterator<Order> iter = orders.iterator();
+            if (order.getTimeInForce() != TimeInForce.DAY) continue;
 
-		while(iter.hasNext()) {
+            iter.remove(); // important otherwise you get a ConcurrentModificationException!
 
-			Order order = iter.next();
+            order.cancel(timestamper.nanoEpoch(), CancelReason.EXPIRED);
+        }
+    }
 
-			assert order.isTerminal() == false;
+    public final void purge() {
 
-			if (order.getTimeInForce() != TimeInForce.DAY) continue;
+        Iterator<Order> iter = orders.iterator();
 
-			iter.remove(); // important otherwise you get a ConcurrentModificationException!
+        while (iter.hasNext()) {
 
-			order.cancel(timestamper.nanoEpoch(), CancelReason.EXPIRED);
-		}
-	}
+            Order order = iter.next();
 
-	public final void purge() {
+            assert order.isTerminal() == false;
 
-		Iterator<Order> iter = orders.iterator();
+            iter.remove(); // important otherwise you get a ConcurrentModificationException!
 
-		while(iter.hasNext()) {
+            order.cancel(timestamper.nanoEpoch(), CancelReason.PURGED);
+        }
+    }
 
-			Order order = iter.next();
+    private final void rest(Order order) {
 
-			assert order.isTerminal() == false;
+        PriceLevel priceLevel = findPriceLevel(order.getSide(), order.getPrice());
 
-			iter.remove(); // important otherwise you get a ConcurrentModificationException!
+        order.setPriceLevel(priceLevel);
 
-			order.cancel(timestamper.nanoEpoch(), CancelReason.PURGED);
-		}
-	}
+        priceLevel.addOrder(order);
 
-	private final void rest(Order order) {
+        orders.put(order.getId(), order);
 
-		PriceLevel priceLevel = findPriceLevel(order.getSide(), order.getPrice());
+        order.rest(timestamper.nanoEpoch());
+    }
 
-		order.setPriceLevel(priceLevel);
+    private Order getOrder(
+            long clientId,
+            CharSequence clientOrderId,
+            String security,
+            Side side,
+            long size,
+            long price,
+            Type type,
+            TimeInForce tif) {
 
-		priceLevel.addOrder(order);
+        Order order = orderPool.get();
 
-		orders.put(order.getId(), order);
+        order.init(clientId, clientOrderId, 0, security, side, size, price, type, tif);
 
-		order.rest(timestamper.nanoEpoch());
-	}
+        order.addListener(this);
 
-	private Order getOrder(long clientId, CharSequence clientOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
+        return order;
+    }
 
-		Order order = orderPool.get();
+    private void removeOrder(Order order) {
 
-		order.init(clientId, clientOrderId, 0, security, side, size, price, type, tif);
+        PriceLevel priceLevel = order.getPriceLevel();
 
-		order.addListener(this);
+        if (priceLevel != null && priceLevel.isEmpty()) {
 
-		return order;
-	}
+            // remove priceLevel...
 
-	private void removeOrder(Order order) {
+            if (priceLevel.prev != null) {
 
-		PriceLevel priceLevel = order.getPriceLevel();
+                priceLevel.prev.next = priceLevel.next;
+            }
 
-		if (priceLevel != null && priceLevel.isEmpty()) {
+            if (priceLevel.next != null) {
 
-			// remove priceLevel...
+                priceLevel.next.prev = priceLevel.prev;
+            }
 
-			if (priceLevel.prev != null) {
+            int index = order.getSide().index();
 
-				priceLevel.prev.next = priceLevel.next;
-			}
+            if (tail[index] == priceLevel) {
 
-			if (priceLevel.next != null) {
+                tail[index] = priceLevel.prev;
+            }
 
-				priceLevel.next.prev = priceLevel.prev;
-			}
+            if (head[index] == priceLevel) {
 
-			int index = order.getSide().index();
+                head[index] = priceLevel.next;
+            }
 
-			if (tail[index] == priceLevel) {
+            levels[index]--;
 
-				tail[index] = priceLevel.prev;
-			}
+            priceLevelPool.release(priceLevel);
+        }
 
-			if (head[index] == priceLevel) {
+        orders.remove(order.getId());
 
-				head[index] = priceLevel.next;
-			}
+        orderPool.release(order);
+    }
 
-			levels[index]--;
-
-			priceLevelPool.release(priceLevel);
-		}
-
-		orders.remove(order.getId());
-
-		orderPool.release(order);
-	}
-
-	@Override
+    @Override
     public void onOrderReduced(long time, Order order, long newSize) {
 
-		int size = listeners.size();
+        int size = listeners.size();
 
-		for(int i = 0; i < size; i++) {
-			listeners.get(i).onOrderReduced(this, time, order, newSize);
-		}
+        for (int i = 0; i < size; i++) {
+            listeners.get(i).onOrderReduced(this, time, order, newSize);
+        }
     }
 
-	@Override
+    @Override
     public void onOrderCanceled(long time, Order order, CancelReason reason) {
 
-		removeOrder(order);
+        removeOrder(order);
 
-		int size = listeners.size();
+        int size = listeners.size();
 
-		for(int i = 0; i < size; i++) {
-			listeners.get(i).onOrderCanceled(this, time, order, reason);
-		}
+        for (int i = 0; i < size; i++) {
+            listeners.get(i).onOrderCanceled(this, time, order, reason);
+        }
     }
 
-	@Override
-    public void onOrderExecuted(long time, Order order, ExecuteSide execSide, long sizeExecuted, long priceExecuted, long executionId, long matchId) {
+    @Override
+    public void onOrderExecuted(
+            long time,
+            Order order,
+            ExecuteSide execSide,
+            long sizeExecuted,
+            long priceExecuted,
+            long executionId,
+            long matchId) {
 
-		if (order.isTerminal()) {
+        if (order.isTerminal()) {
 
-			removeOrder(order);
-		}
+            removeOrder(order);
+        }
 
-		int size = listeners.size();
+        int size = listeners.size();
 
-		for(int i = 0; i < size; i++) {
-			listeners.get(i).onOrderExecuted(this, time, order, execSide, sizeExecuted, priceExecuted, executionId, matchId);
-		}
+        for (int i = 0; i < size; i++) {
+            listeners
+                    .get(i)
+                    .onOrderExecuted(
+                            this,
+                            time,
+                            order,
+                            execSide,
+                            sizeExecuted,
+                            priceExecuted,
+                            executionId,
+                            matchId);
+        }
     }
 
-	@Override
-	public void onOrderAccepted(long time, Order order) {
+    @Override
+    public void onOrderAccepted(long time, Order order) {
 
-		int size = listeners.size();
+        int size = listeners.size();
 
-		for(int i = 0; i < size; i++) {
-			listeners.get(i).onOrderAccepted(this, time, order);
-		}
+        for (int i = 0; i < size; i++) {
+            listeners.get(i).onOrderAccepted(this, time, order);
+        }
+    }
 
-	}
+    @Override
+    public void onOrderRejected(long time, Order order, RejectReason reason) {
 
-	@Override
-	public void onOrderRejected(long time, Order order, RejectReason reason) {
+        removeOrder(order);
 
-		removeOrder(order);
+        int size = listeners.size();
 
-		int size = listeners.size();
+        for (int i = 0; i < size; i++) {
+            listeners.get(i).onOrderRejected(this, time, order, reason);
+        }
+    }
 
-		for(int i = 0; i < size; i++) {
-			listeners.get(i).onOrderRejected(this, time, order, reason);
-		}
-	}
-
-	@Override
+    @Override
     public void onOrderRested(long time, Order order, long restSize, long restPrice) {
 
-		int size = listeners.size();
+        int size = listeners.size();
 
-		for(int i = 0; i < size; i++) {
-			listeners.get(i).onOrderRested(this, time, order, restSize, restPrice);
-		}
+        for (int i = 0; i < size; i++) {
+            listeners.get(i).onOrderRested(this, time, order, restSize, restPrice);
+        }
     }
 
-	@Override
-	public void onOrderTerminated(long time, Order order) {
+    @Override
+    public void onOrderTerminated(long time, Order order) {
 
-		int size = listeners.size();
+        int size = listeners.size();
 
-		for(int i = 0; i < size; i++) {
-			listeners.get(i).onOrderTerminated(this, time, order);
-		}
-	}
+        for (int i = 0; i < size; i++) {
+            listeners.get(i).onOrderTerminated(this, time, order);
+        }
+    }
 
-	@Override
-	public String toString() {
-		return security;
-	}
+    @Override
+    public String toString() {
+        return security;
+    }
 }
