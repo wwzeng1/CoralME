@@ -18,6 +18,7 @@ package com.coralblocks.coralme.example;
 import com.coralblocks.coralme.Order;
 import com.coralblocks.coralme.Side;
 import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Type;
 import com.coralblocks.coralme.OrderBook;
 import com.coralblocks.coralme.OrderBookLogger;
 
@@ -327,6 +328,7 @@ public class Example {
 			  				executedSize=500, canceledSize=0, price=156.43, type=LIMIT, tif=DAY]
 			  executeSide=MAKER
 			  executeSize=500
+
 			  executePrice=156.43
 			  executeId=5
 			  executeMatchId=3

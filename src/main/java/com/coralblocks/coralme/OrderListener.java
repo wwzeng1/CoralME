@@ -15,10 +15,6 @@
  */
 package com.coralblocks.coralme;
 
-import com.coralblocks.coralme.CancelReason;
-import com.coralblocks.coralme.ExecuteSide;
-import com.coralblocks.coralme.RejectReason;
-
 public interface OrderListener {
 
     public void onOrderReduced(long time, Order order, long reduceNewTotalSize);

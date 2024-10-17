@@ -20,14 +20,14 @@ import java.util.List;
 
 import com.coralblocks.coralme.util.DoubleUtils;
 
-public class Order {
+package com.coralblocks.coralme;
 
-    public static final class RejectReason extends com.coralblocks.coralme.RejectReason {}
-    public static final class CancelReason extends com.coralblocks.coralme.CancelReason {}
-    public static final class ExecuteSide extends com.coralblocks.coralme.ExecuteSide {}
-    public static final class Side extends com.coralblocks.coralme.Side {}
-    public static final class TimeInForce extends com.coralblocks.coralme.TimeInForce {}
-    public static final class Type extends com.coralblocks.coralme.Type {}
+import java.util.ArrayList;
+import java.util.List;
+
+import com.coralblocks.coralme.util.DoubleUtils;
+
+public class Order {
 
 	final static String EMPTY_CLIENT_ORDER_ID = "NULL";
 
