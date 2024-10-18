@@ -1,4 +1,65 @@
-/* 
+/*
+ * Copyright 2023 (c) CoralBlocks - http://www.coralblocks.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.coralblocks.coralme;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class OrderBook {
+
+    // ... (other fields and methods)
+
+    private void addOrder(Order o) {
+        PriceLevel level = getLevelToAdd(o.getSide(), o.getPrice());
+        level.addOrder(o);
+        o.setPriceLevel(level);
+        orderMap.put(o.getId(), o);
+    }
+
+    private void removeOrder(Order o) {
+        PriceLevel level = o.getPriceLevel();
+        level.removeOrder(o);
+        if (level.isEmpty()) {
+            removeLevel(level);
+        }
+        orderMap.remove(o.getId());
+    }
+
+    // ... (other methods)
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("OrderBook [security=").append(security).append("]\n");
+
+        sb.append("Bids:\n");
+        for (Order o = topBid; o != null; o = o.next) {
+            sb.append(o.getOpenSize()).append("@").append(o.getPrice()).append("\n");
+        }
+
+        sb.append("Asks:\n");
+        for (Order o = topAsk; o != null; o = o.next) {
+            sb.append(o.getOpenSize()).append("@").append(o.getPrice()).append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    // ... (other methods)
+} 
  * Copyright 2023 (c) CoralBlocks - http://www.coralblocks.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
