@@ -26,14 +26,13 @@ import com.coralblocks.coralme.util.StringUtils;
 public class Order {
 
     // Wrapper classes for backwards compatibility
-    public static class Side implements CharEnum {
+    public static class Side {
         private final com.coralblocks.coralme.Side side;
 
         private Side(com.coralblocks.coralme.Side side) {
             this.side = side;
         }
 
-        @Override
         public char getChar() {
             return side.getChar();
         }
@@ -80,6 +79,124 @@ public class Order {
             return originalSide == com.coralblocks.coralme.Side.BUY ? BUY : SELL;
         }
     }
+
+    public static class TimeInForce {
+        private final com.coralblocks.coralme.TimeInForce tif;
+
+        private TimeInForce(com.coralblocks.coralme.TimeInForce tif) {
+            this.tif = tif;
+        }
+
+        public char getChar() {
+            return tif.getChar();
+        }
+
+        public String getFixCode() {
+            return tif.getFixCode();
+        }
+
+        public static final TimeInForce GTC = new TimeInForce(com.coralblocks.coralme.TimeInForce.GTC);
+        public static final TimeInForce IOC = new TimeInForce(com.coralblocks.coralme.TimeInForce.IOC);
+        public static final TimeInForce DAY = new TimeInForce(com.coralblocks.coralme.TimeInForce.DAY);
+
+        public static final CharMap<TimeInForce> ALL = new CharMap<>();
+        static {
+            ALL.put(GTC.getChar(), GTC);
+            ALL.put(IOC.getChar(), IOC);
+            ALL.put(DAY.getChar(), DAY);
+        }
+
+        public static TimeInForce fromFixCode(CharSequence sb) {
+            com.coralblocks.coralme.TimeInForce originalTif = com.coralblocks.coralme.TimeInForce.fromFixCode(sb);
+            if (originalTif == com.coralblocks.coralme.TimeInForce.GTC) return GTC;
+            if (originalTif == com.coralblocks.coralme.TimeInForce.IOC) return IOC;
+            if (originalTif == com.coralblocks.coralme.TimeInForce.DAY) return DAY;
+            return null;
+        }
+    }
+
+    public static class Type {
+        private final com.coralblocks.coralme.Type type;
+
+        private Type(com.coralblocks.coralme.Type type) {
+            this.type = type;
+        }
+
+        public char getChar() {
+            return type.getChar();
+        }
+
+        public String getFixCode() {
+            return type.getFixCode();
+        }
+
+        public static final Type MARKET = new Type(com.coralblocks.coralme.Type.MARKET);
+        public static final Type LIMIT = new Type(com.coralblocks.coralme.Type.LIMIT);
+
+        public static final CharMap<Type> ALL = new CharMap<>();
+        static {
+            ALL.put(MARKET.getChar(), MARKET);
+            ALL.put(LIMIT.getChar(), LIMIT);
+        }
+
+        public static Type fromFixCode(CharSequence sb) {
+            com.coralblocks.coralme.Type originalType = com.coralblocks.coralme.Type.fromFixCode(sb);
+            return originalType == com.coralblocks.coralme.Type.MARKET ? MARKET : LIMIT;
+        }
+    }
+
+    // Existing fields and methods...
+
+    private Side side;
+    private TimeInForce tif;
+    private Type type;
+
+    // Remove duplicate method definitions
+    // public final TimeInForce getTimeInForce() { ... }
+    // public final Type getType() { ... }
+    // public void init(...) { ... }
+
+    // Update the existing methods to use the wrapper classes
+    public final Side getSide() {
+        return side;
+    }
+
+    public final TimeInForce getTimeInForce() {
+        return tif;
+    }
+
+    public final Type getType() {
+        return type;
+    }
+
+    public void init(long clientId, CharSequence clientOrderId, long exchangeOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
+        // Implementation remains the same, just use the wrapper classes
+        this.clientId = clientId;
+        this.clientOrderId.setLength(0);
+        this.clientOrderId.append(clientOrderId);
+        this.side = side;
+        this.type = type;
+        this.originalSize = this.totalSize = size;
+        this.price = price;
+        this.executedSize = 0;
+        this.security = security;
+        this.id = exchangeOrderId;
+        this.acceptTime = -1;
+        this.restTime = -1;
+        this.reduceTime = -1;
+        this.executeTime = -1;
+        this.cancelTime = -1;
+        this.rejectTime = -1;
+        this.priceLevel = null;
+        this.tif = tif;
+        this.isResting = false;
+        this.isPendingCancel = false;
+        this.pendingSize = -1;
+        this.next = this.prev = null; // sanity!
+    }
+
+    // Other methods remain unchanged
+}
 
     public static class TimeInForce implements CharEnum {
         private final com.coralblocks.coralme.TimeInForce tif;
