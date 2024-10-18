@@ -11,7 +11,7 @@ public enum TimeInForce implements CharEnum {
 
     private final char b;
     private final String fixCode;
-    public static final CharMap<TimeInForce> ALL = new CharMap<TimeInForce>();
+    public static final CharMap<TimeInForce> ALL = new CharMap<>();
 
     static {
         for (TimeInForce tif : TimeInForce.values()) {

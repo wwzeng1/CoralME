@@ -10,7 +10,7 @@ public enum ExecuteSide implements CharEnum {
 
     private final char b;
     private final String fixCode;
-    public static final CharMap<ExecuteSide> ALL = new CharMap<ExecuteSide>();
+    public static final CharMap<ExecuteSide> ALL = new CharMap<>();
 
     static {
         for (ExecuteSide es : ExecuteSide.values()) {

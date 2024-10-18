@@ -11,7 +11,7 @@ public enum Side implements CharEnum {
     private final char b;
     private final String fixCode;
     private final int index;
-    public static final CharMap<Side> ALL = new CharMap<Side>();
+    public static final CharMap<Side> ALL = new CharMap<>();
 
     static {
         for (Side s : Side.values()) {

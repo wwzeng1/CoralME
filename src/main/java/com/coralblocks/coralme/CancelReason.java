@@ -14,7 +14,7 @@ public enum CancelReason implements CharEnum {
     ROLLED('R');
 
     private final char b;
-    public static final CharMap<CancelReason> ALL = new CharMap<CancelReason>();
+    public static final CharMap<CancelReason> ALL = new CharMap<>();
 
     static {
         for (CancelReason cr : CancelReason.values()) {

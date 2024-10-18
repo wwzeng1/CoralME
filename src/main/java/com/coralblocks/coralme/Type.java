@@ -10,7 +10,7 @@ public enum Type implements CharEnum {
 
     private final char b;
     private final String fixCode;
-    public static final CharMap<Type> ALL = new CharMap<Type>();
+    public static final CharMap<Type> ALL = new CharMap<>();
 
     static {
         for (Type t : Type.values()) {

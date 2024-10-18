@@ -19,7 +19,7 @@ public enum RejectReason implements CharEnum {
     DUPLICATE_CLIENT_ORDER_ID('C');
 
     private final char b;
-    public static final CharMap<RejectReason> ALL = new CharMap<RejectReason>();
+    public static final CharMap<RejectReason> ALL = new CharMap<>();
 
     static {
         for (RejectReason rr : RejectReason.values()) {
