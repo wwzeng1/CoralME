@@ -1,29 +1,4 @@
-package com.coralblocks.coralme;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class OrderBook implements OrderListener {
-
-    // ... other fields and methods ...
-
-    @Override
-    public void onOrderRejected(long time, Order order, RejectReason rejectReason) {
-        // Implementation
-    }
-
-    // ... other methods ...
-
-    private void rejectOrder(long time, Order order, RejectReason rejectReason) {
-        order.reject(time, rejectReason);
-    }
-
-    private void cancelOrder(long time, Order order, CancelReason cancelReason) {
-        order.cancel(time, cancelReason);
-    }
-
-    // ... other methods ...
-} 
+/* 
  * Copyright 2023 (c) CoralBlocks - http://www.coralblocks.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
