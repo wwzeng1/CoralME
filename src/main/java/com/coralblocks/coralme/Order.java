@@ -23,63 +23,77 @@ import com.coralblocks.coralme.util.CharMap;
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.StringUtils;
 
+import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Type;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
+
 public class Order {
 
-    // Wrapper classes for backwards compatibility
-    public static class Side implements CharEnum {
-        private final com.coralblocks.coralme.Side side;
+    private Side side;
+    private TimeInForce tif;
+    private Type type;
 
-        private Side(com.coralblocks.coralme.Side side) {
-            this.side = side;
-        }
+    // ... other fields ...
 
-        @Override
-        public char getChar() {
-            return side.getChar();
-        }
-
-        public String getFixCode() {
-            return side.getFixCode();
-        }
-
-        public int index() {
-            return side.index();
-        }
-
-        public int invertedIndex() {
-            return side.invertedIndex();
-        }
-
-        public boolean isBuy() {
-            return side.isBuy();
-        }
-
-        public boolean isSell() {
-            return side.isSell();
-        }
-
-        public boolean isOutside(long price, long market) {
-            return side.isOutside(price, market);
-        }
-
-        public boolean isInside(long price, long market) {
-            return side.isInside(price, market);
-        }
-
-        public static final Side BUY = new Side(com.coralblocks.coralme.Side.BUY);
-        public static final Side SELL = new Side(com.coralblocks.coralme.Side.SELL);
-
-        public static final CharMap<Side> ALL = new CharMap<>();
-        static {
-            ALL.put(BUY.getChar(), BUY);
-            ALL.put(SELL.getChar(), SELL);
-        }
-
-        public static Side fromFixCode(CharSequence sb) {
-            com.coralblocks.coralme.Side originalSide = com.coralblocks.coralme.Side.fromFixCode(sb);
-            return originalSide == com.coralblocks.coralme.Side.BUY ? BUY : SELL;
-        }
+    public Side getSide() {
+        return side;
     }
+
+    public void setSide(Side side) {
+        this.side = side;
+    }
+
+    public TimeInForce getTimeInForce() {
+        return tif;
+    }
+
+    public void setTimeInForce(TimeInForce tif) {
+        this.tif = tif;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    // ... other methods ...
+
+    public void init(long clientId, CharSequence clientOrderId, long exchangeOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
+        this.clientId = clientId;
+        this.clientOrderId.setLength(0);
+        this.clientOrderId.append(clientOrderId);
+        this.side = side;
+        this.type = type;
+        this.originalSize = this.totalSize = size;
+        this.price = price;
+        this.executedSize = 0;
+        this.security = security;
+        this.id = exchangeOrderId;
+        this.acceptTime = -1;
+        this.restTime = -1;
+        this.reduceTime = -1;
+        this.executeTime = -1;
+        this.cancelTime = -1;
+        this.rejectTime = -1;
+        this.priceLevel = null;
+        this.tif = tif;
+        this.isResting = false;
+        this.isPendingCancel = false;
+        this.pendingSize = -1;
+        this.next = this.prev = null; // sanity!
+    }
+
+    // Remove the nested classes for CancelReason, ExecuteSide, and RejectReason
+    // as they are now imported directly
+
+    // ... rest of the class ...
+}
 
     public static class TimeInForce implements CharEnum {
         private final com.coralblocks.coralme.TimeInForce tif;
