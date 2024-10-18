@@ -18,11 +18,204 @@ package com.coralblocks.coralme;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.coralblocks.coralme.util.CharEnum;
+import com.coralblocks.coralme.util.CharMap;
 import com.coralblocks.coralme.util.DoubleUtils;
+import com.coralblocks.coralme.util.StringUtils;
 
 public class Order {
 
-    // Static fields for backwards compatibility
+    // Wrapper classes for backwards compatibility
+    public static class Side implements CharEnum {
+        private final com.coralblocks.coralme.Side side;
+
+        private Side(com.coralblocks.coralme.Side side) {
+            this.side = side;
+        }
+
+        @Override
+        public char getChar() {
+            return side.getChar();
+        }
+
+        public String getFixCode() {
+            return side.getFixCode();
+        }
+
+        public int index() {
+            return side.index();
+        }
+
+        public int invertedIndex() {
+            return side.invertedIndex();
+        }
+
+        public boolean isBuy() {
+            return side.isBuy();
+        }
+
+        public boolean isSell() {
+            return side.isSell();
+        }
+
+        public boolean isOutside(long price, long market) {
+            return side.isOutside(price, market);
+        }
+
+        public boolean isInside(long price, long market) {
+            return side.isInside(price, market);
+        }
+
+        public static final Side BUY = new Side(com.coralblocks.coralme.Side.BUY);
+        public static final Side SELL = new Side(com.coralblocks.coralme.Side.SELL);
+
+        public static final CharMap<Side> ALL = new CharMap<>();
+        static {
+            ALL.put(BUY.getChar(), BUY);
+            ALL.put(SELL.getChar(), SELL);
+        }
+
+        public static Side fromFixCode(CharSequence sb) {
+            com.coralblocks.coralme.Side originalSide = com.coralblocks.coralme.Side.fromFixCode(sb);
+            return originalSide == com.coralblocks.coralme.Side.BUY ? BUY : SELL;
+        }
+    }
+
+    public static class TimeInForce implements CharEnum {
+        private final com.coralblocks.coralme.TimeInForce tif;
+
+        private TimeInForce(com.coralblocks.coralme.TimeInForce tif) {
+            this.tif = tif;
+        }
+
+        @Override
+        public char getChar() {
+            return tif.getChar();
+        }
+
+        public String getFixCode() {
+            return tif.getFixCode();
+        }
+
+        public static final TimeInForce GTC = new TimeInForce(com.coralblocks.coralme.TimeInForce.GTC);
+        public static final TimeInForce IOC = new TimeInForce(com.coralblocks.coralme.TimeInForce.IOC);
+        public static final TimeInForce DAY = new TimeInForce(com.coralblocks.coralme.TimeInForce.DAY);
+
+        public static final CharMap<TimeInForce> ALL = new CharMap<>();
+        static {
+            ALL.put(GTC.getChar(), GTC);
+            ALL.put(IOC.getChar(), IOC);
+            ALL.put(DAY.getChar(), DAY);
+        }
+
+        public static TimeInForce fromFixCode(CharSequence sb) {
+            com.coralblocks.coralme.TimeInForce originalTif = com.coralblocks.coralme.TimeInForce.fromFixCode(sb);
+            if (originalTif == com.coralblocks.coralme.TimeInForce.GTC) return GTC;
+            if (originalTif == com.coralblocks.coralme.TimeInForce.IOC) return IOC;
+            if (originalTif == com.coralblocks.coralme.TimeInForce.DAY) return DAY;
+            return null;
+        }
+    }
+
+    public static class Type implements CharEnum {
+        private final com.coralblocks.coralme.Type type;
+
+        private Type(com.coralblocks.coralme.Type type) {
+            this.type = type;
+        }
+
+        @Override
+        public char getChar() {
+            return type.getChar();
+        }
+
+        public String getFixCode() {
+            return type.getFixCode();
+        }
+
+        public static final Type MARKET = new Type(com.coralblocks.coralme.Type.MARKET);
+        public static final Type LIMIT = new Type(com.coralblocks.coralme.Type.LIMIT);
+
+        public static final CharMap<Type> ALL = new CharMap<>();
+        static {
+            ALL.put(MARKET.getChar(), MARKET);
+            ALL.put(LIMIT.getChar(), LIMIT);
+        }
+
+        public static Type fromFixCode(CharSequence sb) {
+            com.coralblocks.coralme.Type originalType = com.coralblocks.coralme.Type.fromFixCode(sb);
+            return originalType == com.coralblocks.coralme.Type.MARKET ? MARKET : LIMIT;
+        }
+    }
+
+    public static class TimeInForce implements CharEnum {
+        private final com.coralblocks.coralme.TimeInForce tif;
+
+        private TimeInForce(com.coralblocks.coralme.TimeInForce tif) {
+            this.tif = tif;
+        }
+
+        @Override
+        public char getChar() {
+            return tif.getChar();
+        }
+
+        public String getFixCode() {
+            return tif.getFixCode();
+        }
+
+        public static final TimeInForce GTC = new TimeInForce(com.coralblocks.coralme.TimeInForce.GTC);
+        public static final TimeInForce IOC = new TimeInForce(com.coralblocks.coralme.TimeInForce.IOC);
+        public static final TimeInForce DAY = new TimeInForce(com.coralblocks.coralme.TimeInForce.DAY);
+
+        public static final CharMap<TimeInForce> ALL = new CharMap<>();
+        static {
+            ALL.put(GTC.getChar(), GTC);
+            ALL.put(IOC.getChar(), IOC);
+            ALL.put(DAY.getChar(), DAY);
+        }
+
+        public static TimeInForce fromFixCode(CharSequence sb) {
+            com.coralblocks.coralme.TimeInForce originalTif = com.coralblocks.coralme.TimeInForce.fromFixCode(sb);
+            if (originalTif == com.coralblocks.coralme.TimeInForce.GTC) return GTC;
+            if (originalTif == com.coralblocks.coralme.TimeInForce.IOC) return IOC;
+            if (originalTif == com.coralblocks.coralme.TimeInForce.DAY) return DAY;
+            return null;
+        }
+    }
+
+    public static class Type implements CharEnum {
+        private final com.coralblocks.coralme.Type type;
+
+        private Type(com.coralblocks.coralme.Type type) {
+            this.type = type;
+        }
+
+        @Override
+        public char getChar() {
+            return type.getChar();
+        }
+
+        public String getFixCode() {
+            return type.getFixCode();
+        }
+
+        public static final Type MARKET = new Type(com.coralblocks.coralme.Type.MARKET);
+        public static final Type LIMIT = new Type(com.coralblocks.coralme.Type.LIMIT);
+
+        public static final CharMap<Type> ALL = new CharMap<>();
+        static {
+            ALL.put(MARKET.getChar(), MARKET);
+            ALL.put(LIMIT.getChar(), LIMIT);
+        }
+
+        public static Type fromFixCode(CharSequence sb) {
+            com.coralblocks.coralme.Type originalType = com.coralblocks.coralme.Type.fromFixCode(sb);
+            return originalType == com.coralblocks.coralme.Type.MARKET ? MARKET : LIMIT;
+        }
+    }
+
+    // Existing static classes remain unchanged
     public static final class CancelReason {
         public static final com.coralblocks.coralme.CancelReason MISSED = com.coralblocks.coralme.CancelReason.MISSED;
         public static final com.coralblocks.coralme.CancelReason USER = com.coralblocks.coralme.CancelReason.USER;
@@ -54,29 +247,13 @@ public class Order {
         public static final com.coralblocks.coralme.RejectReason DUPLICATE_CLIENT_ORDER_ID = com.coralblocks.coralme.RejectReason.DUPLICATE_CLIENT_ORDER_ID;
     }
 
-    public static final class Side {
-        public static final com.coralblocks.coralme.Side BUY = com.coralblocks.coralme.Side.BUY;
-        public static final com.coralblocks.coralme.Side SELL = com.coralblocks.coralme.Side.SELL;
-    }
+    final static String EMPTY_CLIENT_ORDER_ID = "NULL";
 
-    public static final class TimeInForce {
-        public static final com.coralblocks.coralme.TimeInForce GTC = com.coralblocks.coralme.TimeInForce.GTC;
-        public static final com.coralblocks.coralme.TimeInForce IOC = com.coralblocks.coralme.TimeInForce.IOC;
-        public static final com.coralblocks.coralme.TimeInForce DAY = com.coralblocks.coralme.TimeInForce.DAY;
-    }
-
-    public static final class Type {
-        public static final com.coralblocks.coralme.Type MARKET = com.coralblocks.coralme.Type.MARKET;
-        public static final com.coralblocks.coralme.Type LIMIT = com.coralblocks.coralme.Type.LIMIT;
-    }
-
-	final static String EMPTY_CLIENT_ORDER_ID = "NULL";
-
-	public final static int CLIENT_ORDER_ID_MAX_LENGTH = 64;
+    public final static int CLIENT_ORDER_ID_MAX_LENGTH = 64;
 
     private final List<OrderListener> listeners = new ArrayList<OrderListener>(64);
 
-    private com.coralblocks.coralme.Side side;
+    private Side side;
 
     private long originalSize;
 
@@ -108,9 +285,9 @@ public class Order {
 
     private String security;
 
-    private com.coralblocks.coralme.TimeInForce tif;
+    private TimeInForce tif;
 
-    private com.coralblocks.coralme.Type type;
+    private Type type;
 
     Order next = null;
 
@@ -125,6 +302,8 @@ public class Order {
     public Order() {
 
     }
+
+    // The rest of the Order class implementation remains unchanged
 
 	public void init(long clientId, CharSequence clientOrderId, long exchangeOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
 
@@ -319,95 +498,108 @@ public class Order {
     	return price;
     }
 
-    public final com.coralblocks.coralme.Side getSide() {
-
+    public final Side getSide() {
     	return side;
     }
 
-    public final com.coralblocks.coralme.Side getOtherSide() {
-
-    	return side == com.coralblocks.coralme.Side.BUY ? com.coralblocks.coralme.Side.SELL : com.coralblocks.coralme.Side.BUY;
+    public final Side getOtherSide() {
+    	return side == Side.BUY ? Side.SELL : Side.BUY;
     }
 
     public final long getId() {
-
     	return id;
     }
 
     public final long getExchangeOrderId() {
-
     	return id;
     }
 
     public final long getClientId() {
-
     	return clientId;
     }
 
     public final CharSequence getClientOrderId() {
-
     	return clientOrderId;
     }
 
     public final String getSecurity() {
-
     	return security;
     }
 
     public void addListener(OrderListener listener) {
-
     	/*
     	 * It is very important that the OrderListener from OrderBook be executed LAST, in other words, it
     	 * should be executed AFTER the OrderListener from PriceLevel, so the level can be removed if empty.
     	 *
     	 * That's why the listeners will be called from last to first.
     	 */
-
         listeners.add(listener);
     }
 
     public void accept(long time, long id) {
-
     	this.id = id;
-
     	this.acceptTime = time;
 
         int x = listeners.size();
-
         for(int i = x - 1; i >= 0; i--) {
-
         	listeners.get(i).onOrderAccepted(time, this);
         }
     }
 
     public void rest(long time) {
-
     	this.isResting = true;
-
     	this.restTime = time;
 
         int x = listeners.size();
-
         for(int i = x - 1; i >= 0; i--) {
-
         	listeners.get(i).onOrderRested(time, this, getOpenSize(), getPrice());
         }
     }
 
-    public void reject(long time, com.coralblocks.coralme.RejectReason reason) {
-
+    public void reject(long time, RejectReason reason) {
     	this.totalSize = this.executedSize = 0;
-
     	this.rejectTime = time;
 
         int x = listeners.size();
-
         for(int i = x - 1; i >= 0; i--) {
-
         	listeners.get(i).onOrderRejected(time, this, reason);
         }
 
         listeners.clear();
+    }
+
+    // Add these methods to handle the new wrapper classes
+    public final TimeInForce getTimeInForce() {
+    	return tif;
+    }
+
+    public final Type getType() {
+    	return type;
+    }
+
+    public void init(long clientId, CharSequence clientOrderId, long exchangeOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
+    	this.clientId = clientId;
+    	this.clientOrderId.setLength(0);
+    	this.clientOrderId.append(clientOrderId);
+    	this.side = side;
+    	this.type = type;
+    	this.originalSize = this.totalSize = size;
+    	this.price = price;
+    	this.executedSize = 0;
+    	this.security = security;
+    	this.id = exchangeOrderId;
+    	this.acceptTime = -1;
+    	this.restTime = -1;
+    	this.reduceTime = -1;
+    	this.executeTime = -1;
+    	this.cancelTime = -1;
+    	this.rejectTime = -1;
+    	this.priceLevel = null;
+    	this.tif = tif;
+    	this.isResting = false;
+    	this.isPendingCancel = false;
+    	this.pendingSize = -1;
+    	this.next = this.prev = null; // sanity!
     }
 
     public void reduceTo(long time, long newTotalSize) {
