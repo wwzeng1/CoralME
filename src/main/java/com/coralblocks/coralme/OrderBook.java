@@ -32,102 +32,179 @@ import com.coralblocks.coralme.util.ObjectPool;
 import com.coralblocks.coralme.util.SystemTimestamper;
 import com.coralblocks.coralme.util.Timestamper;
 
-	public final Timestamper getTimestamper() {
+public class OrderBook implements OrderListener {
+	
+	private static final boolean DEFAULT_ALLOW_TRADE_TO_SELF = true;
+	
+	private static final Timestamper TIMESTAMPER = new SystemTimestamper();
+	
+	public static enum State { NORMAL, LOCKED, CROSSED, ONESIDED, EMPTY }
+	
+	private final ObjectPool<Order> orderPool = new LinkedObjectPool<Order>(8, Order.class);
+	
+	private final ObjectPool<PriceLevel> priceLevelPool = new LinkedObjectPool<PriceLevel>(8, PriceLevel.class);
+	
+	private long execId = 0;
+	
+	private long matchId = 0;
+	
+	private PriceLevel[] head = new PriceLevel[2];
+	
+	private PriceLevel[] tail = new PriceLevel[2];
+	
+	private int[] levels = new int[] { 0, 0 };
+	
+	private final LongMap<Order> orders = new LongMap<Order>();
+	
+	private final String security;
+	
+	private long lastExecutedPrice = Long.MAX_VALUE;
+	
+	private final List<OrderBookListener> listeners = new ArrayList<OrderBookListener>(8);
+	
+	private final Timestamper timestamper;
+	
+	private final boolean allowTradeToSelf;
+	
+	
+	public OrderBook(String security, boolean allowTradeToSelf) {
+		this(security, TIMESTAMPER, null, allowTradeToSelf);
+	}
+	
+	public OrderBook(String security) {
+		this(security, TIMESTAMPER, null);
+	}
+	
+	public OrderBook(String security, Timestamper timestamper, boolean allowTradeToSelf) {
+		this(security, timestamper, null, allowTradeToSelf);
+	}
+	
+	public OrderBook(String security, Timestamper timestamper) {
+		this(security, timestamper, null);
+	}
+	
+	public OrderBook(String security, OrderBookListener listener, boolean allowTradeToSelf) {
+		this(security, TIMESTAMPER, listener, allowTradeToSelf);
+	}
+	
+	public OrderBook(String security, OrderBookListener listener) {
+		this(security, TIMESTAMPER, listener);
+	}
+	
+	public OrderBook(String security, Timestamper timestamper, OrderBookListener listener) {
+		this(security, timestamper, listener, DEFAULT_ALLOW_TRADE_TO_SELF);
+	}
+	
+	public OrderBook(OrderBook orderBook) {
+		this(orderBook.getSecurity(), orderBook.getTimestamper(), null, orderBook.isAllowTradeToSelf());
+		 List<OrderBookListener> listeners = orderBook.getListeners();
+		 for(int i = 0; i < listeners.size(); i++) {
+			 addListener(listeners.get(i));
+		 }
+	}
+
+	public OrderBook(String security, Timestamper timestamper, OrderBookListener listener, boolean allowTradeToSelf) {
+		
+		this.security = security;
+		
+		this.timestamper = timestamper;
+		
+		this.allowTradeToSelf = allowTradeToSelf;
+		
+		if (listener != null) listeners.add(listener);
+	}
+	
+	public void addListener(OrderBookListener listener) {
+		if (!listeners.contains(listener)) listeners.add(listener);
+	}
+	
+	public void removeListener(OrderBookListener listener) {
+		listeners.remove(listener);
+	}
+	
+	public List<OrderBookListener> getListeners() {
+		return listeners;
+	}
+	
+	public final boolean isAllowTradeToSelf() {
+		return allowTradeToSelf;
+	}
+	
+	public Timestamper getTimestamper() {
 		return timestamper;
 	}
-
-	public final String getSecurity() {
+	
+	public String getSecurity() {
+		
 		return security;
 	}
-
+	
 	public final Order getBestBidOrder() {
+		
 		if (!hasBids()) return null;
+		
 		PriceLevel pl = head(Side.BUY);
+		
 		return pl.head();
 	}
-
+	
 	public final Order getBestAskOrder() {
+		
 		if (!hasAsks()) return null;
+		
 		PriceLevel pl = head(Side.SELL);
+				
 		return pl.head();
 	}
-
+	
 	public final LongMap<Order> getOrders() {
 		return orders;
 	}
-
+	
 	public final Order getOrder(long id) {
+		
 		return orders.get(id);
 	}
-
+	
 	public final int getNumberOfOrders() {
+		
 		return orders.size();
 	}
-
+	
 	public final boolean isEmpty() {
+
 		return orders.isEmpty();
 	}
-
+	
 	public final PriceLevel head(Side side) {
+		
 		return head[side.index()];
 	}
-
+	
 	public final PriceLevel tail(Side side) {
+		
 		return tail[side.index()];
 	}
-
+	
 	public long getLastExecutedPrice() {
+		
 		return lastExecutedPrice;
 	}
-
+	
 	public final boolean hasSpread() {
 		return hasBestBid() && hasBestAsk();
 	}
-
+	
 	public final long getSpread() {
+		
 		PriceLevel bestBid = head[Side.BUY.index()];
+		
 		PriceLevel bestAsk = head[Side.SELL.index()];
+		
 		assert bestBid != null && bestAsk != null;
+		
 		return bestAsk.getPrice() - bestBid.getPrice();
 	}
-
-	@Override
-	public void onOrderReduced(long time, Order order, long reduceNewTotalSize) {
-		// Implementation
-	}
-
-	@Override
-	public void onOrderCanceled(long time, Order order, CancelReason cancelReason) {
-		// Implementation
-	}
-
-	@Override
-	public void onOrderExecuted(long time, Order order, ExecuteSide executeSide, long executeSize, long executePrice, long executeId, long executeMatchId) {
-		// Implementation
-	}
-
-	@Override
-	public void onOrderAccepted(long time, Order order) {
-		// Implementation
-	}
-
-	@Override
-	public void onOrderRejected(long time, Order order, RejectReason rejectReason) {
-		// Implementation
-	}
-
-	@Override
-	public void onOrderRested(long time, Order order, long restSize, long restPrice) {
-		// Implementation
-	}
-
-	@Override
-	public void onOrderTerminated(long time, Order order) {
-		// Implementation
-	}
-
-	// ... rest of the class ...
-}
 	
 	public final State getState() {
 
