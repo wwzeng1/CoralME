@@ -9,13 +9,6 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
-
-import com.coralblocks.coralme.CancelReason;
-import com.coralblocks.coralme.ExecuteSide;
-import com.coralblocks.coralme.RejectReason;
-import com.coralblocks.coralme.Side;
-import com.coralblocks.coralme.TimeInForce;
-import com.coralblocks.coralme.Type;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
@@ -28,6 +21,14 @@ import java.util.List;
 import com.coralblocks.coralme.util.DoubleUtils;
 
 public class Order {
+
+    // Static inner classes for backwards compatibility
+    public static class CancelReason extends com.coralblocks.coralme.CancelReason {}
+    public static class ExecuteSide extends com.coralblocks.coralme.ExecuteSide {}
+    public static class RejectReason extends com.coralblocks.coralme.RejectReason {}
+    public static class Side extends com.coralblocks.coralme.Side {}
+    public static class TimeInForce extends com.coralblocks.coralme.TimeInForce {}
+    public static class Type extends com.coralblocks.coralme.Type {}
 
 	final static String EMPTY_CLIENT_ORDER_ID = "NULL";
 
