@@ -22,13 +22,53 @@ import com.coralblocks.coralme.util.DoubleUtils;
 
 public class Order {
 
-    // Static inner classes for backwards compatibility
-    public static class CancelReason extends com.coralblocks.coralme.CancelReason {}
-    public static class ExecuteSide extends com.coralblocks.coralme.ExecuteSide {}
-    public static class RejectReason extends com.coralblocks.coralme.RejectReason {}
-    public static class Side extends com.coralblocks.coralme.Side {}
-    public static class TimeInForce extends com.coralblocks.coralme.TimeInForce {}
-    public static class Type extends com.coralblocks.coralme.Type {}
+    // Static fields for backwards compatibility
+    public static final class CancelReason {
+        public static final com.coralblocks.coralme.CancelReason MISSED = com.coralblocks.coralme.CancelReason.MISSED;
+        public static final com.coralblocks.coralme.CancelReason USER = com.coralblocks.coralme.CancelReason.USER;
+        public static final com.coralblocks.coralme.CancelReason NO_LIQUIDITY = com.coralblocks.coralme.CancelReason.NO_LIQUIDITY;
+        public static final com.coralblocks.coralme.CancelReason PRICE = com.coralblocks.coralme.CancelReason.PRICE;
+        public static final com.coralblocks.coralme.CancelReason CROSSED = com.coralblocks.coralme.CancelReason.CROSSED;
+        public static final com.coralblocks.coralme.CancelReason PURGED = com.coralblocks.coralme.CancelReason.PURGED;
+        public static final com.coralblocks.coralme.CancelReason EXPIRED = com.coralblocks.coralme.CancelReason.EXPIRED;
+        public static final com.coralblocks.coralme.CancelReason ROLLED = com.coralblocks.coralme.CancelReason.ROLLED;
+    }
+
+    public static final class ExecuteSide {
+        public static final com.coralblocks.coralme.ExecuteSide TAKER = com.coralblocks.coralme.ExecuteSide.TAKER;
+        public static final com.coralblocks.coralme.ExecuteSide MAKER = com.coralblocks.coralme.ExecuteSide.MAKER;
+    }
+
+    public static final class RejectReason {
+        public static final com.coralblocks.coralme.RejectReason MISSING_FIELD = com.coralblocks.coralme.RejectReason.MISSING_FIELD;
+        public static final com.coralblocks.coralme.RejectReason BAD_TYPE = com.coralblocks.coralme.RejectReason.BAD_TYPE;
+        public static final com.coralblocks.coralme.RejectReason BAD_TIF = com.coralblocks.coralme.RejectReason.BAD_TIF;
+        public static final com.coralblocks.coralme.RejectReason BAD_SIDE = com.coralblocks.coralme.RejectReason.BAD_SIDE;
+        public static final com.coralblocks.coralme.RejectReason BAD_SYMBOL = com.coralblocks.coralme.RejectReason.BAD_SYMBOL;
+        public static final com.coralblocks.coralme.RejectReason BAD_PRICE = com.coralblocks.coralme.RejectReason.BAD_PRICE;
+        public static final com.coralblocks.coralme.RejectReason BAD_SIZE = com.coralblocks.coralme.RejectReason.BAD_SIZE;
+        public static final com.coralblocks.coralme.RejectReason TRADING_HALTED = com.coralblocks.coralme.RejectReason.TRADING_HALTED;
+        public static final com.coralblocks.coralme.RejectReason BAD_LOT = com.coralblocks.coralme.RejectReason.BAD_LOT;
+        public static final com.coralblocks.coralme.RejectReason UNKNOWN_SYMBOL = com.coralblocks.coralme.RejectReason.UNKNOWN_SYMBOL;
+        public static final com.coralblocks.coralme.RejectReason DUPLICATE_EXCHANGE_ORDER_ID = com.coralblocks.coralme.RejectReason.DUPLICATE_EXCHANGE_ORDER_ID;
+        public static final com.coralblocks.coralme.RejectReason DUPLICATE_CLIENT_ORDER_ID = com.coralblocks.coralme.RejectReason.DUPLICATE_CLIENT_ORDER_ID;
+    }
+
+    public static final class Side {
+        public static final com.coralblocks.coralme.Side BUY = com.coralblocks.coralme.Side.BUY;
+        public static final com.coralblocks.coralme.Side SELL = com.coralblocks.coralme.Side.SELL;
+    }
+
+    public static final class TimeInForce {
+        public static final com.coralblocks.coralme.TimeInForce GTC = com.coralblocks.coralme.TimeInForce.GTC;
+        public static final com.coralblocks.coralme.TimeInForce IOC = com.coralblocks.coralme.TimeInForce.IOC;
+        public static final com.coralblocks.coralme.TimeInForce DAY = com.coralblocks.coralme.TimeInForce.DAY;
+    }
+
+    public static final class Type {
+        public static final com.coralblocks.coralme.Type MARKET = com.coralblocks.coralme.Type.MARKET;
+        public static final com.coralblocks.coralme.Type LIMIT = com.coralblocks.coralme.Type.LIMIT;
+    }
 
 	final static String EMPTY_CLIENT_ORDER_ID = "NULL";
 
@@ -36,7 +76,7 @@ public class Order {
 
     private final List<OrderListener> listeners = new ArrayList<OrderListener>(64);
 
-    private Side side;
+    private com.coralblocks.coralme.Side side;
 
     private long originalSize;
 
@@ -68,9 +108,9 @@ public class Order {
 
     private String security;
 
-    private TimeInForce tif;
+    private com.coralblocks.coralme.TimeInForce tif;
 
-    private Type type;
+    private com.coralblocks.coralme.Type type;
 
     Order next = null;
 
@@ -279,14 +319,14 @@ public class Order {
     	return price;
     }
 
-    public final Side getSide() {
+    public final com.coralblocks.coralme.Side getSide() {
 
     	return side;
     }
 
-    public final Side getOtherSide() {
+    public final com.coralblocks.coralme.Side getOtherSide() {
 
-    	return side == Side.BUY ? Side.SELL : Side.BUY;
+    	return side == com.coralblocks.coralme.Side.BUY ? com.coralblocks.coralme.Side.SELL : com.coralblocks.coralme.Side.BUY;
     }
 
     public final long getId() {
@@ -354,7 +394,7 @@ public class Order {
         }
     }
 
-    public void reject(long time, RejectReason reason) {
+    public void reject(long time, com.coralblocks.coralme.RejectReason reason) {
 
     	this.totalSize = this.executedSize = 0;
 
@@ -374,7 +414,7 @@ public class Order {
 
     	if (newTotalSize <= executedSize) {
 
-    		cancel(time, CancelReason.USER);
+    		cancel(time, com.coralblocks.coralme.CancelReason.USER);
 
     		return;
     	}
@@ -398,10 +438,10 @@ public class Order {
 
     public void cancel(long time, long sizeToCancel) {
 
-    	cancel(time, sizeToCancel, CancelReason.USER);
+    	cancel(time, sizeToCancel, com.coralblocks.coralme.CancelReason.USER);
     }
 
-    public void cancel(long time, long sizeToCancel, CancelReason reason) {
+    public void cancel(long time, long sizeToCancel, com.coralblocks.coralme.CancelReason reason) {
 
     	if (sizeToCancel >= getOpenSize()) {
 
@@ -426,10 +466,10 @@ public class Order {
 
     public void cancel(long time) {
 
-    	cancel(time, CancelReason.USER);
+    	cancel(time, com.coralblocks.coralme.CancelReason.USER);
     }
 
-    public void cancel(long time, CancelReason reason) {
+    public void cancel(long time, com.coralblocks.coralme.CancelReason reason) {
 
     	this.totalSize = this.executedSize;
 
@@ -452,7 +492,7 @@ public class Order {
 
     public void execute(long time, long sizeToExecute) {
 
-    	execute(time, ExecuteSide.TAKER, sizeToExecute, this.price, -1, -1);
+    	execute(time, com.coralblocks.coralme.ExecuteSide.TAKER, sizeToExecute, this.price, -1, -1);
     }
 
     public void execute(long time, ExecuteSide execSide, long sizeToExecute, long priceExecuted, long executionId, long matchId) {
