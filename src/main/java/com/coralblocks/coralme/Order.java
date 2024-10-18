@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2023 (c) CoralBlocks - http://www.coralblocks.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,67 +18,70 @@ package com.coralblocks.coralme;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.coralblocks.coralme.util.CharEnum;
-import com.coralblocks.coralme.util.CharMap;
 import com.coralblocks.coralme.util.DoubleUtils;
-import com.coralblocks.coralme.util.StringUtils;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
+import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Type;
 
 public class Order {
 
 	final static String EMPTY_CLIENT_ORDER_ID = "NULL";
-	
+
 	public final static int CLIENT_ORDER_ID_MAX_LENGTH = 64;
-	
+
     private final List<OrderListener> listeners = new ArrayList<OrderListener>(64);
-    
+
     private Side side;
-    
+
     private long originalSize;
-    
+
     private long totalSize;
-    
+
     private long executedSize;
-    
+
     private PriceLevel priceLevel;
-    
+
     private long clientId;
-    
+
     private final StringBuilder clientOrderId = new StringBuilder(CLIENT_ORDER_ID_MAX_LENGTH);
-    
+
     private long price;
-    
+
     private long acceptTime;
-    
+
     private long restTime;
-    
+
     private long cancelTime;
-    
+
     private long rejectTime;
-    
+
     private long reduceTime;
-    
+
     private long executeTime;
-    
+
     private long id;
-    
+
     private String security;
-    
+
     private TimeInForce tif;
-    
+
     private Type type;
-    
+
     Order next = null;
-    
+
     Order prev = null;
-    
+
     private boolean isResting;
-    
+
     private boolean isPendingCancel;
-    
+
     private long pendingSize;
-    
+
     public Order() {
-    	
+
     }
     
 	public void init(long clientId, CharSequence clientOrderId, long exchangeOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
