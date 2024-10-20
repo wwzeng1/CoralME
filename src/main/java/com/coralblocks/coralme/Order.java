@@ -22,12 +22,6 @@ import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.StringUtils;
 import com.coralblocks.coralme.util.CharEnum;
 import com.coralblocks.coralme.util.CharMap;
-import com.coralblocks.coralme.Side;
-import com.coralblocks.coralme.TimeInForce;
-import com.coralblocks.coralme.Type;
-import com.coralblocks.coralme.ExecuteSide;
-import com.coralblocks.coralme.RejectReason;
-import com.coralblocks.coralme.CancelReason;
 
 public class Order {
 
@@ -86,50 +80,50 @@ public class Order {
     public Order() {
 
     }
-    
+
 	public void init(long clientId, CharSequence clientOrderId, long exchangeOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
-    	
+
 		this.clientId = clientId;
-		
+
     	this.clientOrderId.setLength(0);
     	this.clientOrderId.append(clientOrderId);
-    	
+
     	this.side = side;
-    	
+
     	this.type = type;
-    	
+
     	this.originalSize = this.totalSize = size;
-    	
+
     	this.price = price;
-    	
+
     	this.executedSize = 0;
-    	
+
     	this.security = security;
-    	
+
     	this.id = exchangeOrderId;
-    	
+
     	this.acceptTime = -1;
-    	
+
     	this.restTime = -1;
-    	
+
     	this.reduceTime = -1;
-    	
+
     	this.executeTime = -1;
-    	
+
     	this.cancelTime = -1;
-    	
+
     	this.rejectTime = -1;
-    	
+
     	this.priceLevel = null;
-    	
+
     	this.tif = tif;
-    	
+
     	this.isResting = false;
-    	
+
     	this.isPendingCancel = false;
-    	
+
     	this.pendingSize = -1;
-    	
+
     	this.next = this.prev = null; // sanity!
     }
 	
