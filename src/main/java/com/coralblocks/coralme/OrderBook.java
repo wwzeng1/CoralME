@@ -25,12 +25,12 @@ import com.coralblocks.coralme.util.LongMap;
 import com.coralblocks.coralme.util.ObjectPool;
 import com.coralblocks.coralme.util.SystemTimestamper;
 import com.coralblocks.coralme.util.Timestamper;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
 import com.coralblocks.coralme.Side;
 import com.coralblocks.coralme.TimeInForce;
 import com.coralblocks.coralme.Type;
-import com.coralblocks.coralme.ExecuteSide;
-import com.coralblocks.coralme.RejectReason;
-import com.coralblocks.coralme.CancelReason;
 
 public class OrderBook implements OrderListener {
 
