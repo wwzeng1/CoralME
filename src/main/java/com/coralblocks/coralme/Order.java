@@ -20,6 +20,8 @@ import java.util.List;
 
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.StringUtils;
+import com.coralblocks.coralme.util.CharEnum;
+import com.coralblocks.coralme.util.CharMap;
 import com.coralblocks.coralme.Side;
 import com.coralblocks.coralme.TimeInForce;
 import com.coralblocks.coralme.Type;
@@ -483,143 +485,37 @@ public class Order {
     	}
     }
     
-	// Removed nested enum definitions for RejectReason, CancelRejectReason, and ReduceRejectReason
-	
-	public static enum ReduceRejectReason implements CharEnum { 
+	// Nested enum definitions have been removed and replaced with standalone enum classes
 
-		ZERO 			('Z'), 
+	public static enum ReduceRejectReason implements CharEnum {
+
+		ZERO 			('Z'),
 		NEGATIVE		('N'),
 		INCREASE		('I'),
 		SUPERFLUOUS		('S'),
 		NOT_FOUND		('F');
 
 		private final char b;
-		public final static CharMap<ReduceRejectReason> ALL = new CharMap<ReduceRejectReason>();
-		
+		public static final CharMap<ReduceRejectReason> ALL = new CharMap<>();
+
 		static {
 			for(ReduceRejectReason rrr : ReduceRejectReason.values()) {
 				if (ALL.put(rrr.getChar(), rrr) != null) throw new IllegalStateException("Duplicate: " + rrr);
 			}
 		}
-		
+
 		private ReduceRejectReason(char b) {
 			this.b = b;
 		}
-		
+
     	@Override
         public final char getChar() {
     	    return b;
         }
 	}
 	
-	public static enum ExecuteSide implements CharEnum {
-
-		TAKER			('T',  "Y"),
-		MAKER			('M', "N");
-
-		private final char b;
-		private final String fixCode;
-		public final static CharMap<ExecuteSide> ALL = new CharMap<ExecuteSide>();
-
-		static {
-			for(ExecuteSide es : ExecuteSide.values()) {
-				if (ALL.put(es.getChar(), es) != null) throw new IllegalStateException("Duplicate: " + es);
-			}
-		}
-
-		private ExecuteSide(char b, String fixCode) {
-			this.b = b;
-			this.fixCode = fixCode;
-		}
-
-		public static final ExecuteSide fromFixCode(CharSequence sb) {
-			for(ExecuteSide s : ExecuteSide.values()) {
-				if (StringUtils.equals(s.getFixCode(), sb)) {
-					return s;
-				}
-			}
-			return null;
-		}
-
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-
-    	public final String getFixCode() {
-    		return fixCode;
-    	}
-	}
-	
-	public static enum Side implements CharEnum { 
-
-		BUY 			('B', "1", 0), 
-		SELL			('S', "2", 1);
-
-		private final char b;
-		private final String fixCode;
-		private final int index;
-		public final static CharMap<Side> ALL = new CharMap<Side>();
-		
-		static {
-			
-			for(Side s : Side.values()) {
-				if (ALL.put(s.getChar(), s) != null) throw new IllegalStateException("Duplicate: " + s);
-			}
-			
-			if (ALL.size() != 2) {
-				throw new IllegalStateException("Side must have only two values: BUY and SELL!");
-			}
-		}
-		
-		private Side(char b, String fixCode, int index) {
-			this.b = b;
-			this.fixCode = fixCode;
-			this.index = index;
-		}
-		
-		public static final Side fromFixCode(CharSequence sb) {
-			for(Side s : Side.values()) {
-				if (StringUtils.equals(s.getFixCode(), sb)) {
-					return s;
-				}
-			}
-			return null;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-    	
-    	public final String getFixCode() {
-    		return fixCode;
-    	}
-    
-    	public final int index() {
-    		return index;
-    	}
-    	
-    	public final int invertedIndex() {
-    		return this == BUY ? SELL.index() : BUY.index();
-    	}
-    	
-    	public final boolean isBuy() {
-    		return this == BUY;
-    	}
-    	
-    	public final boolean isSell() {
-    		return this == SELL;
-    	}
-    	
-    	public final boolean isOutside(long price, long market) {
-    		return this == BUY ? price < market : price > market;
-    	}
-    	
-    	public final boolean isInside(long price, long market) {
-    		return this == BUY ? price >= market : price <= market;
-    	}
-	}
+	// The Side enum has been moved to a standalone class, so we remove it from here.
+	// Methods and properties that used the nested Side enum should now use the standalone Side class.
 
 	/**
 	 * This method of course produces garbage and should be used only for debugging purposes.
