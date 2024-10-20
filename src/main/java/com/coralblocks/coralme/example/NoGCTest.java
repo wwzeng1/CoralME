@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2023 (c) CoralBlocks - http://www.coralblocks.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ package com.coralblocks.coralme.example;
 import com.coralblocks.coralme.Order;
 import com.coralblocks.coralme.Side;
 import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Type;
 import com.coralblocks.coralme.OrderBook;
 import com.coralblocks.coralme.OrderBookAdapter;
 import com.coralblocks.coralme.OrderBookListener;
@@ -65,71 +66,71 @@ public class NoGCTest {
 	}
 	
 	public static void main(String[] args) {
-		
+
 		boolean createGarbage = args.length >= 1 ? Boolean.parseBoolean(args[0]) : false;
 		int iterations = args.length >= 2 ? Integer.parseInt(args[1]) : 1000000;
-		
+
 		OrderBookListener noOpListener = new OrderBookAdapter();
-		
+
 		OrderBook book = new OrderBook("AAPL", noOpListener);
-		
+
 		for(int i = 1; i <= iterations; i++) {
-			
+
 			printIteration(i);
-			
+
 			Timestamper ts = book.getTimestamper();
-			
+
 			// Bids:
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.BUY, 1000, 100.00, TimeInForce.DAY);
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.BUY,  900,  99.00, TimeInForce.DAY);
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.BUY,  800,  98.00, TimeInForce.DAY);
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.BUY,  700,  97.00, TimeInForce.DAY);
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.BUY,  500,  95.00, TimeInForce.DAY);
-			
+
 			// Asks:
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.SELL,  500, 102.00, TimeInForce.DAY);
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.SELL,  400, 104.00, TimeInForce.DAY);
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.SELL,  800, 105.00, TimeInForce.DAY);
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.SELL,  700, 108.00, TimeInForce.DAY);
-			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++, Side.SELL,  500, 115.00, TimeInForce.DAY);
-			
+			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.SELL,  500, 115.00, TimeInForce.DAY);
+
 			// Hit top of book with IOCs:
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.BUY,  600, 103.00, TimeInForce.IOC);
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.SELL, 900, 96.00,  TimeInForce.IOC);
-			
+
 			// Reduce and cancel top of book orders
 			Order bidOrder = book.getBestBidOrder();
 			Order askOrder = book.getBestAskOrder();
-			
+
 			if (createGarbage) {
 				// create some garbage for the garbage collector
 				sb.setLength(0);
 				sb.append("someGarbage"); // appending a CharSequence does not produce garbage
 				for(int x = 0; x < 10; x++) sb.toString(); // but this produces garbage
 			}
-			
+
 			bidOrder.reduceTo(ts.nanoEpoch(), 100);
 			askOrder.reduceTo(ts.nanoEpoch(), 100);
-			
+
 			bidOrder.cancel(ts.nanoEpoch());
 			askOrder.cancel(ts.nanoEpoch());
-			
+
 			// Order rejects due odd lot
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.BUY,  620, 103.00, TimeInForce.DAY);
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.SELL, 940, 96.00,  TimeInForce.DAY);
-			
+
 			// Add a couple of more orders in the middle of the book
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.BUY,  600, 96.00,  TimeInForce.DAY);
 			book.createLimit(CLIENT_ID, getClientOrderId(),  orderId++,  Side.SELL, 990, 111.00, TimeInForce.DAY);
-			
+
 			// Now use a market order to remove all liquidity from both sides
 			book.createMarket(CLIENT_ID, getClientOrderId(),  orderId++,  Side.BUY,  15000);
 			book.createMarket(CLIENT_ID, getClientOrderId(),  orderId++,  Side.SELL, 15000);
-			
+
 			// Book must now be empty
 			if (!book.isEmpty()) throw new IllegalStateException("Book must be empty here!");
 		}
-		
+
 		System.out.println(" ... DONE!");
 	}
 }
