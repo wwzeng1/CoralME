@@ -18,10 +18,16 @@ package com.coralblocks.coralme;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.coralblocks.coralme.util.CharEnum;
-import com.coralblocks.coralme.util.CharMap;
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.StringUtils;
+
+// Import the newly created enum files
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
+import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Type;
 
 public class Order {
 
