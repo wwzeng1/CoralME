@@ -15,41 +15,41 @@
  */
 package com.coralblocks.coralme;
 
-import com.coralblocks.coralme.Order.CancelReason;
-import com.coralblocks.coralme.Order.ExecuteSide;
-import com.coralblocks.coralme.Order.RejectReason;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
 import com.coralblocks.coralme.util.DoubleUtils;
 
 /**
- * This is a simple OrderBookListener that prints its callbacks to System.out for debugging. 
+ * This is a simple OrderBookListener that prints its callbacks to System.out for debugging.
  */
 public class OrderBookLogger implements OrderBookListener {
-	
+
 	private boolean isOn = true;
-	
+
 	/**
 	 * Turns on logging to System.out
 	 */
 	public void on() {
 		isOn = true;
 	}
-	
+
 	/**
 	 * Turns off logging to System.out
 	 */
 	public void off() {
 		isOn = false;
 	}
-	
+
 	/**
 	 * Is currently logging to System.out?
-	 * 
+	 *
 	 * @return true if logging
 	 */
 	public boolean isOn() {
 		return isOn;
 	}
-    
+
 	@Override
     public void onOrderReduced(OrderBook orderBook, long time, Order order, long reduceNewTotalSize) {
 		if (!isOn) return;

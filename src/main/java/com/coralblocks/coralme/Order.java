@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2023 (c) CoralBlocks - http://www.coralblocks.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,112 +18,118 @@ package com.coralblocks.coralme;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.coralblocks.coralme.util.CharEnum;
-import com.coralblocks.coralme.util.CharMap;
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.StringUtils;
+import com.coralblocks.coralme.util.CharEnum;
+import com.coralblocks.coralme.util.CharMap;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
+import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Type;
 
 public class Order {
 
 	final static String EMPTY_CLIENT_ORDER_ID = "NULL";
-	
+
 	public final static int CLIENT_ORDER_ID_MAX_LENGTH = 64;
-	
+
     private final List<OrderListener> listeners = new ArrayList<OrderListener>(64);
-    
+
     private Side side;
-    
+
     private long originalSize;
-    
+
     private long totalSize;
-    
+
     private long executedSize;
-    
+
     private PriceLevel priceLevel;
-    
+
     private long clientId;
-    
+
     private final StringBuilder clientOrderId = new StringBuilder(CLIENT_ORDER_ID_MAX_LENGTH);
-    
+
     private long price;
-    
+
     private long acceptTime;
-    
+
     private long restTime;
-    
+
     private long cancelTime;
-    
+
     private long rejectTime;
-    
+
     private long reduceTime;
-    
+
     private long executeTime;
-    
+
     private long id;
-    
+
     private String security;
-    
+
     private TimeInForce tif;
-    
+
     private Type type;
-    
+
     Order next = null;
-    
+
     Order prev = null;
-    
+
     private boolean isResting;
-    
+
     private boolean isPendingCancel;
-    
+
     private long pendingSize;
-    
+
     public Order() {
-    	
+        // Default constructor
     }
-    
+
 	public void init(long clientId, CharSequence clientOrderId, long exchangeOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
-    	
+
 		this.clientId = clientId;
-		
+
     	this.clientOrderId.setLength(0);
     	this.clientOrderId.append(clientOrderId);
-    	
+
     	this.side = side;
-    	
+
     	this.type = type;
-    	
+
     	this.originalSize = this.totalSize = size;
-    	
+
     	this.price = price;
-    	
+
     	this.executedSize = 0;
-    	
+
     	this.security = security;
-    	
+
     	this.id = exchangeOrderId;
-    	
+
     	this.acceptTime = -1;
-    	
+
     	this.restTime = -1;
-    	
+
     	this.reduceTime = -1;
-    	
+
     	this.executeTime = -1;
-    	
+
     	this.cancelTime = -1;
-    	
+
     	this.rejectTime = -1;
-    	
+
     	this.priceLevel = null;
-    	
+
     	this.tif = tif;
-    	
+
     	this.isResting = false;
-    	
+
     	this.isPendingCancel = false;
-    	
+
     	this.pendingSize = -1;
-    	
+
     	this.next = this.prev = null; // sanity!
     }
 	
@@ -479,308 +485,37 @@ public class Order {
     	}
     }
     
-	public static enum TimeInForce implements CharEnum { 
+	// Nested enum definitions have been removed and replaced with standalone enum classes
 
-		GTC 			('T', "1"), 
-		IOC				('I', "3"),
-		DAY				('D', "0");
+	public static enum ReduceRejectReason implements CharEnum {
 
-		private final char b;
-		private final String fixCode;
-		public final static CharMap<TimeInForce> ALL = new CharMap<TimeInForce>();
-		
-		static {
-			for(TimeInForce tif : TimeInForce.values()) {
-				if (ALL.put(tif.getChar(), tif) != null) throw new IllegalStateException("Duplicate: " + tif);
-			}
-		}
-		
-		private TimeInForce(char b, String fixCode) {
-			this.b = b;
-			this.fixCode = fixCode;
-		}
-		
-		public static final TimeInForce fromFixCode(CharSequence sb) {
-			for(TimeInForce s : TimeInForce.values()) {
-				if (StringUtils.equals(s.getFixCode(), sb)) {
-					return s;
-				}
-			}
-			return null;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-    	
-    	public final String getFixCode() {
-    		return fixCode;
-    	}
-	}
-	
-	public static enum RejectReason implements CharEnum { 
-
-		MISSING_FIELD		('1'),
-		BAD_TYPE			('2'),
-		BAD_TIF				('3'),
-		BAD_SIDE			('4'),
-		BAD_SYMBOL			('5'),
-		
-		BAD_PRICE 			('P'), 
-		BAD_SIZE			('S'),
-		TRADING_HALTED		('H'),
-		BAD_LOT				('L'),
-		UNKNOWN_SYMBOL		('U'),
-		DUPLICATE_EXCHANGE_ORDER_ID	('E'),
-		DUPLICATE_CLIENT_ORDER_ID ('C');
-
-		private final char b;
-		public final static CharMap<RejectReason> ALL = new CharMap<RejectReason>();
-		
-		static {
-			for(RejectReason rr : RejectReason.values()) {
-				if (ALL.put(rr.getChar(), rr) != null) throw new IllegalStateException("Duplicate: " + rr);
-			}
-		}
-		
-		private RejectReason(char b) {
-			this.b = b;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-	}
-
-	public static enum CancelRejectReason implements CharEnum {
-		
-		NOT_FOUND		('F');
-		
-		private final char b;
-		public final static CharMap<CancelRejectReason> ALL = new CharMap<CancelRejectReason>();
-		
-		static {
-			for(CancelRejectReason crr : CancelRejectReason.values()) {
-				if (ALL.put(crr.getChar(), crr) != null) throw new IllegalStateException("Duplicate: " + crr);
-			}
-		}
-		
-		private CancelRejectReason(char b) {
-			this.b = b;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-	}
-	
-	public static enum CancelReason implements CharEnum { 
-
-		MISSED 			('M'), 
-		USER			('U'),
-		NO_LIQUIDITY	('L'),
-		PRICE			('E'),
-		CROSSED			('C'),
-		PURGED			('P'),
-		EXPIRED			('D'),
-		ROLLED			('R');
-
-		private final char b;
-		public final static CharMap<CancelReason> ALL = new CharMap<CancelReason>();
-		
-		static {
-			for(CancelReason cr : CancelReason.values()) {
-				if (ALL.put(cr.getChar(), cr) != null) throw new IllegalStateException("Duplicate: " + cr);
-			}
-		}
-		
-		private CancelReason(char b) {
-			this.b = b;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-	}
-	
-	public static enum ReduceRejectReason implements CharEnum { 
-
-		ZERO 			('Z'), 
+		ZERO 			('Z'),
 		NEGATIVE		('N'),
 		INCREASE		('I'),
 		SUPERFLUOUS		('S'),
 		NOT_FOUND		('F');
 
 		private final char b;
-		public final static CharMap<ReduceRejectReason> ALL = new CharMap<ReduceRejectReason>();
-		
+		public static final CharMap<ReduceRejectReason> ALL = new CharMap<>();
+
 		static {
 			for(ReduceRejectReason rrr : ReduceRejectReason.values()) {
 				if (ALL.put(rrr.getChar(), rrr) != null) throw new IllegalStateException("Duplicate: " + rrr);
 			}
 		}
-		
+
 		private ReduceRejectReason(char b) {
 			this.b = b;
 		}
-		
+
     	@Override
         public final char getChar() {
     	    return b;
         }
 	}
 	
-	public static enum Type implements CharEnum { 
-
-		MARKET 			('M', "1"), 
-		LIMIT			('L', "2");
-
-		private final char b;
-		private final String fixCode;
-		public final static CharMap<Type> ALL = new CharMap<Type>();
-		
-		static {
-			for(Type t : Type.values()) {
-				if (ALL.put(t.getChar(), t) != null) throw new IllegalStateException("Duplicate: " + t);
-			}
-		}
-		
-		private Type(char b, String fixCode) {
-			this.b = b;
-			this.fixCode = fixCode;
-		}
-		
-		public static final Type fromFixCode(CharSequence sb) {
-			for(Type s : Type.values()) {
-				if (StringUtils.equals(s.getFixCode(), sb)) {
-					return s;
-				}
-			}
-			return null;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-    	
-    	public final String getFixCode() {
-    		return fixCode;
-    	}
-	}
-	
-	public static enum ExecuteSide implements CharEnum {
-		
-		TAKER			('T', "Y"),
-		MAKER			('M', "N");
-		
-		private final char b;
-		private final String fixCode;
-		public final static CharMap<ExecuteSide> ALL = new CharMap<ExecuteSide>();
-		
-		static {
-			for(ExecuteSide es : ExecuteSide.values()) {
-				if (ALL.put(es.getChar(), es) != null) throw new IllegalStateException("Duplicate: " + es);
-			}
-		}
-		
-		private ExecuteSide(char b, String fixCode) {
-			this.b = b;
-			this.fixCode = fixCode;
-		}
-		
-		public static final ExecuteSide fromFixCode(CharSequence sb) {
-			for(ExecuteSide s : ExecuteSide.values()) {
-				if (StringUtils.equals(s.getFixCode(), sb)) {
-					return s;
-				}
-			}
-			return null;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-    	
-    	public final String getFixCode() {
-    		return fixCode;
-    	}
-	}
-	
-	public static enum Side implements CharEnum { 
-
-		BUY 			('B', "1", 0), 
-		SELL			('S', "2", 1);
-
-		private final char b;
-		private final String fixCode;
-		private final int index;
-		public final static CharMap<Side> ALL = new CharMap<Side>();
-		
-		static {
-			
-			for(Side s : Side.values()) {
-				if (ALL.put(s.getChar(), s) != null) throw new IllegalStateException("Duplicate: " + s);
-			}
-			
-			if (ALL.size() != 2) {
-				throw new IllegalStateException("Side must have only two values: BUY and SELL!");
-			}
-		}
-		
-		private Side(char b, String fixCode, int index) {
-			this.b = b;
-			this.fixCode = fixCode;
-			this.index = index;
-		}
-		
-		public static final Side fromFixCode(CharSequence sb) {
-			for(Side s : Side.values()) {
-				if (StringUtils.equals(s.getFixCode(), sb)) {
-					return s;
-				}
-			}
-			return null;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-    	
-    	public final String getFixCode() {
-    		return fixCode;
-    	}
-    
-    	public final int index() {
-    		return index;
-    	}
-    	
-    	public final int invertedIndex() {
-    		return this == BUY ? SELL.index() : BUY.index();
-    	}
-    	
-    	public final boolean isBuy() {
-    		return this == BUY;
-    	}
-    	
-    	public final boolean isSell() {
-    		return this == SELL;
-    	}
-    	
-    	public final boolean isOutside(long price, long market) {
-    		return this == BUY ? price < market : price > market;
-    	}
-    	
-    	public final boolean isInside(long price, long market) {
-    		return this == BUY ? price >= market : price <= market;
-    	}
-	}
+	// The Side enum has been moved to a standalone class, so we remove it from here.
+	// Methods and properties that used the nested Side enum should now use the standalone Side class.
 
 	/**
 	 * This method of course produces garbage and should be used only for debugging purposes.
