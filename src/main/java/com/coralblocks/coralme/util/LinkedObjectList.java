@@ -25,7 +25,7 @@ import java.util.Iterator;
  * 
  * @param <E> the type of objects this object list will hold
  */
-public class LinkedObjectList<E> implements Iterable<E> {
+public final class LinkedObjectList<E> implements Iterable<E> {
 
 	private static class Entry<E> {
 		E value = null;

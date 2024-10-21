@@ -30,8 +30,8 @@ import com.coralblocks.coralme.util.Timestamper;
  * <p>Alternatively you can pass <i>true</i> to createGarbage to see a lot of GC activity.</p>
  *
  * <p>You should also decrease the max size of your heap memory so that if the GC has to kick in, it will do it sooner than later.</p>
- *
- * <p>A good command-line example is:  <b><code>java -verbose:gc -Xms128m -Xmx256m -cp target/classes com.coralblocks.coralme.example.NoGCTest</code></b></p>
+ * 
+ * <p>A good command-line example is:  <b>{@code java -verbose:gc -Xms128m -Xmx256m -cp target/classes com.coralblocks.coralme.example.NoGCTest}</b></p>
  */
 public class NoGCTest {
 
@@ -74,6 +74,12 @@ public class NoGCTest {
 
 		OrderBook book = new OrderBook("AAPL", noOpListener);
 
+//		System.gc();
+//		System.runFinalization();
+//
+
+		long startTime = System.nanoTime();
+
 		for(int i = 1; i <= iterations; i++) {
 
 			printIteration(i);
@@ -106,7 +112,7 @@ public class NoGCTest {
 				// create some garbage for the garbage collector
 				sb.setLength(0);
 				sb.append("someGarbage"); // appending a CharSequence does not produce garbage
-				for(int x = 0; x < 10; x++) sb.toString(); // but this produces garbage
+				for(int x = 0; x < 1000; x++) sb.toString(); // but this produces garbage
 			}
 
 			bidOrder.reduceTo(ts.nanoEpoch(), 100);
@@ -130,7 +136,12 @@ public class NoGCTest {
 			// Book must now be empty
 			if (!book.isEmpty()) throw new IllegalStateException("Book must be empty here!");
 		}
-
+		
+		long endTime = System.nanoTime();
+		long totalTime = endTime - startTime;
+		long avgTimePerOperation = totalTime / (iterations * 24); // 24 operations per iteration
+		
 		System.out.println(" ... DONE!");
+		System.out.println("Average time per book operation: " + avgTimePerOperation + " nanoseconds");
 	}
 }

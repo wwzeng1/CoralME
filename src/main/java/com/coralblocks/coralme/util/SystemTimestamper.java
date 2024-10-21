@@ -15,21 +15,23 @@
  */
 package com.coralblocks.coralme.util;
 
+import java.time.Instant;
+import java.util.concurrent.TimeUnit;
+
 /**
  * <p>This timestamper is here just for illustrative purposes.</p>
  * 
  * <p>There are of course much better ways to get the epoch with nanosecond precision. And without producing any garbage for the GC.</p>
  */
-public class SystemTimestamper implements Timestamper {
-	
-	/**
-	 * Simply returns System.currentTimeMillis * 1000000L.
-	 * Of course this is bad, so feel free to implement other better/native/garbage-free timestampers ;)
-	 * 
-	 * @return the epoch timestamp in nanoseconds
-	 */
+public final class SystemTimestamper implements Timestamper {
+
+	private static final long EPOCH_OFFSET_NANOS = TimeUnit.SECONDS.toNanos(Instant.now().getEpochSecond()) - System.nanoTime();
+
+	// Get nanoseconds since Epoch
 	@Override
-	public long nanoEpoch() {
-		return System.currentTimeMillis() * 1000000L;
+    public long nanoEpoch() {
+		return System.nanoTime() + EPOCH_OFFSET_NANOS;
 	}
+
+
 }
