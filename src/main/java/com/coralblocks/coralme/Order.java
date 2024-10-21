@@ -18,67 +18,65 @@ package com.coralblocks.coralme;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.coralblocks.coralme.util.CharEnum;
-import com.coralblocks.coralme.util.CharMap;
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.StringUtils;
 
 public class Order {
 
 	final static String EMPTY_CLIENT_ORDER_ID = "NULL";
-	
+
 	public final static int CLIENT_ORDER_ID_MAX_LENGTH = 64;
-	
+
     private final List<OrderListener> listeners = new ArrayList<OrderListener>(64);
-    
+
     private Side side;
-    
+
     private long originalSize;
-    
+
     private long totalSize;
-    
+
     private long executedSize;
-    
+
     private PriceLevel priceLevel;
-    
+
     private long clientId;
-    
+
     private final StringBuilder clientOrderId = new StringBuilder(CLIENT_ORDER_ID_MAX_LENGTH);
-    
+
     private long price;
-    
+
     private long acceptTime;
-    
+
     private long restTime;
-    
+
     private long cancelTime;
-    
+
     private long rejectTime;
-    
+
     private long reduceTime;
-    
+
     private long executeTime;
-    
+
     private long id;
-    
+
     private String security;
-    
+
     private TimeInForce tif;
-    
+
     private Type type;
-    
+
     Order next = null;
-    
+
     Order prev = null;
-    
+
     private boolean isResting;
-    
+
     private boolean isPendingCancel;
-    
+
     private long pendingSize;
-    
+
     public Order() {
-    	
+
     }
     
 	public void init(long clientId, CharSequence clientOrderId, long exchangeOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
@@ -479,80 +477,7 @@ public class Order {
     	}
     }
     
-	public static enum TimeInForce implements CharEnum { 
-
-		GTC 			('T', "1"), 
-		IOC				('I', "3"),
-		DAY				('D', "0");
-
-		private final char b;
-		private final String fixCode;
-		public final static CharMap<TimeInForce> ALL = new CharMap<TimeInForce>();
-		
-		static {
-			for(TimeInForce tif : TimeInForce.values()) {
-				if (ALL.put(tif.getChar(), tif) != null) throw new IllegalStateException("Duplicate: " + tif);
-			}
-		}
-		
-		private TimeInForce(char b, String fixCode) {
-			this.b = b;
-			this.fixCode = fixCode;
-		}
-		
-		public static final TimeInForce fromFixCode(CharSequence sb) {
-			for(TimeInForce s : TimeInForce.values()) {
-				if (StringUtils.equals(s.getFixCode(), sb)) {
-					return s;
-				}
-			}
-			return null;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-    	
-    	public final String getFixCode() {
-    		return fixCode;
-    	}
-	}
-	
-	public static enum RejectReason implements CharEnum { 
-
-		MISSING_FIELD		('1'),
-		BAD_TYPE			('2'),
-		BAD_TIF				('3'),
-		BAD_SIDE			('4'),
-		BAD_SYMBOL			('5'),
-		
-		BAD_PRICE 			('P'), 
-		BAD_SIZE			('S'),
-		TRADING_HALTED		('H'),
-		BAD_LOT				('L'),
-		UNKNOWN_SYMBOL		('U'),
-		DUPLICATE_EXCHANGE_ORDER_ID	('E'),
-		DUPLICATE_CLIENT_ORDER_ID ('C');
-
-		private final char b;
-		public final static CharMap<RejectReason> ALL = new CharMap<RejectReason>();
-		
-		static {
-			for(RejectReason rr : RejectReason.values()) {
-				if (ALL.put(rr.getChar(), rr) != null) throw new IllegalStateException("Duplicate: " + rr);
-			}
-		}
-		
-		private RejectReason(char b) {
-			this.b = b;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-	}
+// Enum definitions removed
 
 	public static enum CancelRejectReason implements CharEnum {
 		
