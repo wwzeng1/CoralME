@@ -16,18 +16,9 @@
 package com.coralblocks.coralme;
 
 import com.coralblocks.coralme.util.DoubleUtils;
-import com.coralblocks.coralme.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.coralblocks.coralme.Side;
-import com.coralblocks.coralme.TimeInForce;
-import com.coralblocks.coralme.ExecuteSide;
-import com.coralblocks.coralme.Type;
-import com.coralblocks.coralme.RejectReason;
-import com.coralblocks.coralme.CancelReason;
-import com.coralblocks.coralme.CancelRejectReason;
 
 public class Order {
 
@@ -507,154 +498,15 @@ public class Order {
         }
     }
 
-``
+    // Note: All enum definitions (CancelReason, ExecuteSide, RejectReason, Side, TimeInForce, Type,
+    // and CancelRejectReason)
+    // have been moved to separate files in the com.coralblocks.coralme package for better
+    // organization and maintainability.
 
-    public static enum Type implements CharEnum {
-        MARKET('M', "1"),
-        LIMIT('L', "2");
-
-        private final char b;
-        private final String fixCode;
-        public static final CharMap<Type> ALL = new CharMap<Type>();
-
-        static {
-            for (Type t : Type.values()) {
-                if (ALL.put(t.getChar(), t) != null)
-                    throw new IllegalStateException("Duplicate: " + t);
-            }
-        }
-
-        private Type(char b, String fixCode) {
-            this.b = b;
-            this.fixCode = fixCode;
-        }
-
-        public static final Type fromFixCode(CharSequence sb) {
-            for (Type s : Type.values()) {
-                if (StringUtils.equals(s.getFixCode(), sb)) {
-                    return s;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public final char getChar() {
-            return b;
-        }
-
-        public final String getFixCode() {
-            return fixCode;
-        }
-    }
-
-    public static enum ExecuteSide implements CharEnum {
-        TAKER('T', "Y"),
-        MAKER('M', "N");
-
-        private final char b;
-        private final String fixCode;
-        public static final CharMap<ExecuteSide> ALL = new CharMap<ExecuteSide>();
-
-        static {
-            for (ExecuteSide es : ExecuteSide.values()) {
-                if (ALL.put(es.getChar(), es) != null)
-                    throw new IllegalStateException("Duplicate: " + es);
-            }
-        }
-
-        private ExecuteSide(char b, String fixCode) {
-            this.b = b;
-            this.fixCode = fixCode;
-        }
-
-        public static final ExecuteSide fromFixCode(CharSequence sb) {
-            for (ExecuteSide s : ExecuteSide.values()) {
-                if (StringUtils.equals(s.getFixCode(), sb)) {
-                    return s;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public final char getChar() {
-            return b;
-        }
-
-        public final String getFixCode() {
-            return fixCode;
-        }
-    }
-
-    public static enum Side implements CharEnum {
-        BUY('B', "1", 0),
-        SELL('S', "2", 1);
-
-        private final char b;
-        private final String fixCode;
-        private final int index;
-        public static final CharMap<Side> ALL = new CharMap<Side>();
-
-        static {
-            for (Side s : Side.values()) {
-                if (ALL.put(s.getChar(), s) != null)
-                    throw new IllegalStateException("Duplicate: " + s);
-            }
-
-            if (ALL.size() != 2) {
-                throw new IllegalStateException("Side must have only two values: BUY and SELL!");
-            }
-        }
-
-        private Side(char b, String fixCode, int index) {
-            this.b = b;
-            this.fixCode = fixCode;
-            this.index = index;
-        }
-
-        public static final Side fromFixCode(CharSequence sb) {
-            for (Side s : Side.values()) {
-                if (StringUtils.equals(s.getFixCode(), sb)) {
-                    return s;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public final char getChar() {
-            return b;
-        }
-
-        public final String getFixCode() {
-            return fixCode;
-        }
-
-        public final int index() {
-            return index;
-        }
-
-        public final int invertedIndex() {
-            return this == BUY ? SELL.index() : BUY.index();
-        }
-
-        public final boolean isBuy() {
-            return this == BUY;
-        }
-
-        public final boolean isSell() {
-            return this == SELL;
-        }
-
-        public final boolean isOutside(long price, long market) {
-            return this == BUY ? price < market : price > market;
-        }
-
-        public final boolean isInside(long price, long market) {
-            return this == BUY ? price >= market : price <= market;
-        }
-    }
+    // Note: All enum definitions (CancelReason, ExecuteSide, RejectReason, Side, TimeInForce, Type,
+    // and CancelRejectReason) have been moved to separate files in the com.coralblocks.coralme
+    // package
+    // for better organization and maintainability.
 
     /**
      * This method of course produces garbage and should be used only for debugging purposes. Use
