@@ -104,6 +104,126 @@ public class PriceLevel implements OrderListener {
 
     	return tail;
     }
+
+    public void addOrder(Order order) {
+
+        if (head == null) {
+
+            head = tail = order;
+
+            order.prev = order.next = null;
+
+        } else {
+
+            tail.next = order;
+
+            order.prev = tail;
+
+            tail = order;
+
+            order.next = null;
+        }
+
+        size += order.getOpenSize();
+
+        orders++;
+
+        sizeDirty = true;
+
+        order.addListener(this);
+    }
+
+    public void removeOrder(Order order) {
+
+        if (order.prev != null) {
+
+            order.prev.next = order.next;
+        }
+
+        if (order.next != null) {
+
+            order.next.prev = order.prev;
+        }
+
+        if (tail == order) {
+
+            tail = order.prev;
+        }
+
+        if (head == order) {
+
+            head = order.next;
+        }
+
+        orders--;
+
+        sizeDirty = true;
+    }
+
+    public final long getSize() {
+
+        if (sizeDirty) {
+
+            size = 0;
+
+            for(Order o = head; o != null; o = o.next) {
+
+                size += o.getOpenSize();
+            }
+        }
+
+        return size;
+    }
+
+    @Override
+    public void onOrderReduced(long time, Order order, long newTotaSize) {
+
+        sizeDirty = true;
+    }
+
+    @Override
+    public void onOrderCanceled(long time, Order order, CancelReason reason) {
+
+        sizeDirty = true;
+
+        removeOrder(order);
+    }
+
+    @Override
+    public void onOrderExecuted(long time, Order order, ExecuteSide execSide, long sizeExecuted, long priceExecuted, long executionId, long matchId) {
+
+        sizeDirty = true;
+
+        if (order.isTerminal()) {
+
+        	removeOrder(order);
+        }
+    }
+
+	@Override
+	public void onOrderAccepted(long time, Order order) {
+
+		// NOOP
+	}
+
+	@Override
+    public void onOrderRejected(long time, Order order, RejectReason reason) {
+
+		// NOOP
+    }
+
+	@Override
+    public void onOrderRested(long time, Order order, long restSize, long restPrice) {
+
+		// NOOP
+    }
+
+	@Override
+	public void onOrderTerminated(long time, Order order) {
+
+		// NOOP
+	}
+}
     
     public void addOrder(Order order) {
         

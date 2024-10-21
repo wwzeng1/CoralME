@@ -196,14 +196,124 @@ public class OrderBook implements OrderListener {
 	}
 	
 	public final long getSpread() {
-		
+
 		PriceLevel bestBid = head[Side.BUY.index()];
-		
+
 		PriceLevel bestAsk = head[Side.SELL.index()];
-		
+
 		assert bestBid != null && bestAsk != null;
-		
+
 		return bestAsk.getPrice() - bestBid.getPrice();
+	}
+
+	public final State getState() {
+
+		PriceLevel bestBid = head[Side.BUY.index()];
+
+		PriceLevel bestAsk = head[Side.SELL.index()];
+
+		if (bestBid != null && bestAsk != null) {
+
+			long spread = bestAsk.getPrice() - bestBid.getPrice();
+
+			if (spread == 0) return State.LOCKED;
+
+			if (spread < 0) return State.CROSSED;
+
+			return State.NORMAL;
+
+		} else if (bestBid == null && bestAsk == null) {
+
+			return State.EMPTY;
+
+		} else {
+
+			return State.ONESIDED;
+		}
+	}
+
+	public final boolean hasTop(Side side) {
+
+		return side.isBuy() ? hasBestBid() : hasBestAsk();
+	}
+
+	public final boolean hasAsks() {
+		return hasBestAsk();
+	}
+
+	public final boolean hasBids() {
+		return hasBestBid();
+	}
+
+	public final boolean hasBestBid() {
+
+		return head[Side.BUY.index()] != null;
+	}
+
+	public final boolean hasBestAsk() {
+
+		return head[Side.SELL.index()] != null;
+	}
+
+	public final long getBestPrice(Side side) {
+
+		return side.isBuy() ? getBestBidPrice() : getBestAskPrice();
+	}
+
+	public final long getBestBidPrice() {
+
+		int index = Side.BUY.index();
+
+		assert head[index] != null;
+
+		return head[index].getPrice();
+	}
+
+	public final long getBestAskPrice() {
+
+		int index = Side.SELL.index();
+
+		assert head[index] != null;
+
+		return head[index].getPrice();
+	}
+
+	public final long getBestSize(Side side) {
+
+		return side.isBuy() ? getBestBidSize() : getBestAskSize();
+	}
+
+	public final long getBestBidSize() {
+
+		int index = Side.BUY.index();
+
+		assert head[index] != null;
+
+		return head[index].getSize();
+	}
+
+	public final long getBestAskSize() {
+
+		int index = Side.SELL.index();
+
+		assert head[index] != null;
+
+		return head[index].getSize();
+	}
+
+	public final int getLevels(Side side) {
+
+		return side.isBuy() ? getBidLevels() : getAskLevels();
+	}
+
+	public final int getBidLevels() {
+
+		return levels[Side.BUY.index()];
+	}
+
+	public final int getAskLevels() {
+
+		return levels[Side.SELL.index()];
 	}
 	
 	public final State getState() {
