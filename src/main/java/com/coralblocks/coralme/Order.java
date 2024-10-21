@@ -21,6 +21,14 @@ import com.coralblocks.coralme.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.Type;
+import com.coralblocks.coralme.RejectReason;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.CancelRejectReason;
+
 public class Order {
 
     static final String EMPTY_CLIENT_ORDER_ID = "NULL";
@@ -499,62 +507,7 @@ public class Order {
         }
     }
 
-    public static enum CancelReason implements CharEnum {
-        MISSED('M'),
-        USER('U'),
-        NO_LIQUIDITY('L'),
-        PRICE('E'),
-        CROSSED('C'),
-        PURGED('P'),
-        EXPIRED('D'),
-        ROLLED('R');
-
-        private final char b;
-        public static final CharMap<CancelReason> ALL = new CharMap<CancelReason>();
-
-        static {
-            for (CancelReason cr : CancelReason.values()) {
-                if (ALL.put(cr.getChar(), cr) != null)
-                    throw new IllegalStateException("Duplicate: " + cr);
-            }
-        }
-
-        private CancelReason(char b) {
-            this.b = b;
-        }
-
-        @Override
-        public final char getChar() {
-            return b;
-        }
-    }
-
-    public static enum ReduceRejectReason implements CharEnum {
-        ZERO('Z'),
-        NEGATIVE('N'),
-        INCREASE('I'),
-        SUPERFLUOUS('S'),
-        NOT_FOUND('F');
-
-        private final char b;
-        public static final CharMap<ReduceRejectReason> ALL = new CharMap<ReduceRejectReason>();
-
-        static {
-            for (ReduceRejectReason rrr : ReduceRejectReason.values()) {
-                if (ALL.put(rrr.getChar(), rrr) != null)
-                    throw new IllegalStateException("Duplicate: " + rrr);
-            }
-        }
-
-        private ReduceRejectReason(char b) {
-            this.b = b;
-        }
-
-        @Override
-        public final char getChar() {
-            return b;
-        }
-    }
+``
 
     public static enum Type implements CharEnum {
         MARKET('M', "1"),
