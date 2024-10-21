@@ -26,6 +26,12 @@ import com.coralblocks.coralme.util.LongMap;
 import com.coralblocks.coralme.util.ObjectPool;
 import com.coralblocks.coralme.util.SystemTimestamper;
 import com.coralblocks.coralme.util.Timestamper;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.RejectReason;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.Type;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.Side;
 
 public class OrderBook implements OrderListener {
 
@@ -824,36 +830,36 @@ public class OrderBook implements OrderListener {
     }
 
 	@Override
-    public void onOrderExecuted(long time, Order order, ExecuteSide execSide, long sizeExecuted, long priceExecuted, long executionId, long matchId) {
-		
+    public void onOrderExecuted(long time, Order order, ExecuteSide executeSide, long executeSize, long executePrice, long executeId, long executeMatchId) {
+
 		if (order.isTerminal()) {
-			
+
 			removeOrder(order);
 		}
-		
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
-			listeners.get(i).onOrderExecuted(this, time, order, execSide, sizeExecuted, priceExecuted, executionId, matchId);
+			listeners.get(i).onOrderExecuted(this, time, order, executeSide, executeSize, executePrice, executeId, executeMatchId);
 		}
     }
 
 	@Override
 	public void onOrderAccepted(long time, Order order) {
-		
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
 			listeners.get(i).onOrderAccepted(this, time, order);
 		}
-		
+
 	}
-	
+
 	@Override
-	public void onOrderRejected(long time, Order order, Order.RejectReason reason) {
-	
+	public void onOrderRejected(long time, Order order, RejectReason reason) {
+
 		removeOrder(order);
-		
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
@@ -863,24 +869,24 @@ public class OrderBook implements OrderListener {
 
 	@Override
     public void onOrderRested(long time, Order order, long restSize, long restPrice) {
-	    
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
 			listeners.get(i).onOrderRested(this, time, order, restSize, restPrice);
 		}
     }
-	
+
 	@Override
 	public void onOrderTerminated(long time, Order order) {
-		
+
 		int size = listeners.size();
-		
+
 		for(int i = 0; i < size; i++) {
 			listeners.get(i).onOrderTerminated(this, time, order);
 		}
 	}
-	
+
 	@Override
 	public String toString() {
 		return security;

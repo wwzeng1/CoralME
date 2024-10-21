@@ -16,8 +16,9 @@
 package com.coralblocks.coralme.example;
 
 import com.coralblocks.coralme.Order;
-import com.coralblocks.coralme.Order.Side;
-import com.coralblocks.coralme.Order.TimeInForce;
+import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Type;
 import com.coralblocks.coralme.OrderBook;
 import com.coralblocks.coralme.OrderBookAdapter;
 import com.coralblocks.coralme.OrderBookListener;
@@ -25,38 +26,38 @@ import com.coralblocks.coralme.util.Timestamper;
 
 /**
  * <p>Run this test with <b>-verbose:gc</b> and look for any GC activity. <b>You must not see any.</b></p>
- * 
+ *
  * <p>Alternatively you can pass <i>true</i> to createGarbage to see a lot of GC activity.</p>
- * 
+ *
  * <p>You should also decrease the max size of your heap memory so that if the GC has to kick in, it will do it sooner than later.</p>
- * 
+ *
  * <p>A good command-line example is:  <b>{@code java -verbose:gc -Xms128m -Xmx256m -cp target/classes com.coralblocks.coralme.example.NoGCTest}</b></p>
  */
 public class NoGCTest {
-	
+
 	private static final long CLIENT_ID = 1002L;
 
 	private static final boolean USE_BAD_SYSTEM_OUT_PRINT = false; // turn this on and you will see a lot of garbage from System.out.print
 	private final static StringBuilder sb = new StringBuilder(1024);
 	private static long orderId = 1;
-	
+
 	private static CharSequence getClientOrderId() {
 		sb.setLength(0);
 		sb.append(orderId);
 		return sb;
 	}
-	
+
 	private static void printWithoutGarbage(CharSequence cs) {
 		int size = cs.length();
 		for(int i = 0; i < size; i++) System.out.write(cs.charAt(i));
 		System.out.flush();
 	}
-	
+
 	private static void printIteration(int x) {
-		
+
 		sb.setLength(0);
 		sb.append('\r').append(x); // does not produce garbage
-		
+
 		if (USE_BAD_SYSTEM_OUT_PRINT) {
 			System.out.print(sb); // produces garbage!
 		} else {

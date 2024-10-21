@@ -19,6 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.coralblocks.coralme.util.DoubleUtils;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.RejectReason;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.Type;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.Side;
 
 public class Order {
 
@@ -448,73 +454,35 @@ public class Order {
     }
     
     public void execute(long time, ExecuteSide execSide, long sizeToExecute, long priceExecuted, long executionId, long matchId) {
-    	
+
     	if (sizeToExecute > getOpenSize()) {
-    		
+
     		sizeToExecute = getOpenSize();
     	}
-    	
+
     	this.executedSize += sizeToExecute;
-    	
+
     	this.executeTime = time;
-    	
+
     	int x = listeners.size();
-    	
+
     	for(int i = x - 1; i >= 0; i--) {
-    		
+
     		listeners.get(i).onOrderExecuted(time, this, execSide, sizeToExecute, priceExecuted, executionId, matchId);
     	}
-    	
+
     	if (isTerminal()) {
-    		
+
         	for(int i = x - 1; i >= 0; i--) {
-        		
+
         		listeners.get(i).onOrderTerminated(time, this);
         	}
-    		
+
     		listeners.clear();
     	}
     }
-    
-	public static enum TimeInForce implements CharEnum { 
 
-		GTC 			('T', "1"), 
-		IOC				('I', "3"),
-		DAY				('D', "0");
-
-		private final char b;
-		private final String fixCode;
-		public final static CharMap<TimeInForce> ALL = new CharMap<TimeInForce>();
-		
-		static {
-			for(TimeInForce tif : TimeInForce.values()) {
-				if (ALL.put(tif.getChar(), tif) != null) throw new IllegalStateException("Duplicate: " + tif);
-			}
-		}
-		
-		private TimeInForce(char b, String fixCode) {
-			this.b = b;
-			this.fixCode = fixCode;
-		}
-		
-		public static final TimeInForce fromFixCode(CharSequence sb) {
-			for(TimeInForce s : TimeInForce.values()) {
-				if (StringUtils.equals(s.getFixCode(), sb)) {
-					return s;
-				}
-			}
-			return null;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-    	
-    	public final String getFixCode() {
-    		return fixCode;
-    	}
-	}
+    // Removed enum definitions
 	
 	public static enum RejectReason implements CharEnum { 
 

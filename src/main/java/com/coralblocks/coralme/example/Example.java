@@ -16,85 +16,86 @@
 package com.coralblocks.coralme.example;
 
 import com.coralblocks.coralme.Order;
-import com.coralblocks.coralme.Order.Side;
-import com.coralblocks.coralme.Order.TimeInForce;
+import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Type;
 import com.coralblocks.coralme.OrderBook;
 import com.coralblocks.coralme.OrderBookLogger;
 
 public class Example {
-	
+
 	public static void main(String[] args) {
-		
+
 		final long CLIENT_ID = 1001L;
 
 		long orderId = 0;
-		
+
 		// This OrderBookListener will print all callbacks to System.out
 		OrderBookLogger orderBookLogger = new OrderBookLogger();
-		
+
 		OrderBook orderBook = new OrderBook("AAPL", orderBookLogger);
-		
+
 		orderBook.createLimit(CLIENT_ID, String.valueOf(++orderId), orderId, Side.BUY, 200, 150.44, TimeInForce.DAY);
-		
+
 		/*
 			-----> onOrderAccepted called:
 			  orderBook=AAPL
 			  time=1700598048045000000
-			  order=Order [id=1, clientId=1001, clientOrderId=1, side=BUY, security=AAPL, originalSize=200, openSize=200, 
+			  order=Order [id=1, clientId=1001, clientOrderId=1, side=BUY, security=AAPL, originalSize=200, openSize=200,
 			  				executedSize=0, canceledSize=0, price=150.44, type=LIMIT, tif=DAY]
-			
+
 			-----> onOrderRested called:
 			  orderBook=AAPL
 			  time=1700598048047000000
-			  order=Order [id=1, clientId=1001, clientOrderId=1, side=BUY, security=AAPL, originalSize=200, openSize=200, 
+			  order=Order [id=1, clientId=1001, clientOrderId=1, side=BUY, security=AAPL, originalSize=200, openSize=200,
 			  				executedSize=0, canceledSize=0, price=150.44, type=LIMIT, tif=DAY]
 			  restSize=200
 			  restPrice=150.44
 		*/
-		
+
 		orderBook.showLevels();
-		
+
 		/*
 		   200 @    150.44 (orders=1)
-		-------- 
+		--------
 		*/
-		
+
 		orderBook.showOrders();
-		
+
 		/*
 		   200 @    150.44 (id=1)
-		-------- 			  
+		--------
 		*/
-		
+
 		orderBook.createLimit(CLIENT_ID, String.valueOf(++orderId), orderId, Side.BUY, 500, 149.44, TimeInForce.DAY);
-		
-		/* 
+
+		/*
 			-----> onOrderAccepted called:
 			  orderBook=AAPL
 			  time=1700598048049000000
-			  order=Order [id=2, clientId=1001, clientOrderId=2, side=BUY, security=AAPL, originalSize=500, openSize=500, 
+			  order=Order [id=2, clientId=1001, clientOrderId=2, side=BUY, security=AAPL, originalSize=500, openSize=500,
 			  				executedSize=0, canceledSize=0, price=149.44, type=LIMIT, tif=DAY]
-			
+
 			-----> onOrderRested called:
 			  orderBook=AAPL
 			  time=1700598048050000000
-			  order=Order [id=2, clientId=1001, clientOrderId=2, side=BUY, security=AAPL, originalSize=500, openSize=500, 
+			  order=Order [id=2, clientId=1001, clientOrderId=2, side=BUY, security=AAPL, originalSize=500, openSize=500,
 			  				executedSize=0, canceledSize=0, price=149.44, type=LIMIT, tif=DAY]
 			  restSize=500
-			  restPrice=149.44	
+			  restPrice=149.44
 		*/
 
 		orderBookLogger.off(); // omit callbacks output for clarity
-		
+
 		orderBook.createLimit(CLIENT_ID, String.valueOf(++orderId), orderId, Side.BUY, 100, 149.44, TimeInForce.GTC);
 		orderBook.createLimit(CLIENT_ID, String.valueOf(++orderId), orderId, Side.BUY, 100, 148.14, TimeInForce.DAY);
-		
+
 		orderBook.createLimit(CLIENT_ID, String.valueOf(++orderId), orderId, Side.SELL, 300, 153.24, TimeInForce.GTC);
 		orderBook.createLimit(CLIENT_ID, String.valueOf(++orderId), orderId, Side.SELL, 500, 156.43, TimeInForce.DAY);
 		orderBook.createLimit(CLIENT_ID, String.valueOf(++orderId), orderId, Side.SELL, 1500, 158.54, TimeInForce.DAY);
-		
+
 		orderBook.showLevels();
-		
+
 		/*
 		   100 @    148.14 (orders=1)
 		   600 @    149.44 (orders=2)
@@ -102,11 +103,11 @@ public class Example {
 		--------      2.80
 		   300 @    153.24 (orders=1)
 		   500 @    156.43 (orders=1)
-		  1500 @    158.54 (orders=1)		
+		  1500 @    158.54 (orders=1)
 		*/
-		
+
 		orderBook.showOrders();
-		
+
 		/*
 		   100 @    148.14 (id=4)
 		   500 @    149.44 (id=2)
@@ -117,11 +118,11 @@ public class Example {
 		   500 @    156.43 (id=6)
 		  1500 @    158.54 (id=7)
 		*/
-		
+
 		orderBookLogger.on();
-		
+
 		// Buy 100 @ market
-		
+
 		orderBook.createMarket(CLIENT_ID, String.valueOf(++orderId), orderId, Side.BUY, 100);
 		
 		/*
