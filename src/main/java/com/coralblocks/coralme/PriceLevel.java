@@ -43,7 +43,7 @@ public class PriceLevel implements OrderListener {
     PriceLevel prev = null;
 
     public PriceLevel() {
-
+        // Default constructor
     }
 
     PriceLevel(String security, Side side, long price) {

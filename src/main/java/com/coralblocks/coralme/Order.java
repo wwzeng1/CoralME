@@ -84,7 +84,7 @@ public class Order {
     private long pendingSize;
 
     public Order() {
-
+        // Default constructor
     }
 
 	public void init(long clientId, CharSequence clientOrderId, long exchangeOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
