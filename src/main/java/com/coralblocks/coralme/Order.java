@@ -18,13 +18,16 @@ package com.coralblocks.coralme;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.coralblocks.coralme.util.CharEnum;
+import com.coralblocks.coralme.util.CharMap;
+import com.coralblocks.coralme.util.StringUtils;
 import com.coralblocks.coralme.util.DoubleUtils;
-import com.coralblocks.coralme.TimeInForce;
 import com.coralblocks.coralme.RejectReason;
 import com.coralblocks.coralme.CancelReason;
 import com.coralblocks.coralme.Type;
 import com.coralblocks.coralme.ExecuteSide;
 import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
 
 public class Order {
 
@@ -353,104 +356,133 @@ public class Order {
     }
     
     public void reject(long time, RejectReason reason) {
-    	
+
     	this.totalSize = this.executedSize = 0;
-    	
+
     	this.rejectTime = time;
-    	
+
         int x = listeners.size();
-        
+
         for(int i = x - 1; i >= 0; i--) {
-        	
+
         	listeners.get(i).onOrderRejected(time, this, reason);
         }
-        
+
         listeners.clear();
     }
-    
+
     public void reduceTo(long time, long newTotalSize) {
-    	
+
     	if (newTotalSize <= executedSize) {
-    		
+
     		cancel(time, CancelReason.USER);
-    		
+
     		return;
     	}
-    	
+
     	if (newTotalSize > totalSize) {
-    		
+
     		newTotalSize = totalSize;
     	}
-    	
+
     	this.totalSize = newTotalSize;
-    	
+
     	this.reduceTime = time;
-    	
+
     	int x = listeners.size();
-    	
+
     	for(int i = x - 1; i >= 0; i--) {
-    		
+
     		listeners.get(i).onOrderReduced(time, this, this.totalSize);
     	}
     }
-    
+
     public void cancel(long time, long sizeToCancel) {
-    	
+
     	cancel(time, sizeToCancel, CancelReason.USER);
     }
-    
+
     public void cancel(long time, long sizeToCancel, CancelReason reason) {
-    	
+
     	if (sizeToCancel >= getOpenSize()) {
-    		
+
     		cancel(time, reason);
-    		
+
     		return;
     	}
-    	
+
     	long newSize = getOpenSize() - sizeToCancel + executedSize;
-    	
+
     	this.totalSize = newSize;
-    	
+
     	this.reduceTime = time;
-    	
+
     	int x = listeners.size();
-    	
+
     	for(int i = x - 1; i >= 0; i--) {
-    		
+
     		listeners.get(i).onOrderReduced(time, this, newSize);
     	}
     }
-    
+
     public void cancel(long time) {
-    	
+
     	cancel(time, CancelReason.USER);
     }
-    
+
     public void cancel(long time, CancelReason reason) {
-    	
+
     	this.totalSize = this.executedSize;
-    	
+
     	this.cancelTime = time;
-    	
+
     	int x = listeners.size();
-    	
+
     	for(int i = x - 1; i >= 0; i--) {
-    		
+
     		listeners.get(i).onOrderCanceled(time, this, reason);
     	}
-    	
+
     	for(int i = x - 1; i >= 0; i--) {
-    		
+
     		listeners.get(i).onOrderTerminated(time, this);
     	}
-    	
+
     	listeners.clear();
     }
-    
+
     public void execute(long time, long sizeToExecute) {
-    	
+
     	execute(time, ExecuteSide.TAKER, sizeToExecute, this.price, -1, -1);
+    }
+
+    public void execute(long time, ExecuteSide execSide, long sizeExecuted, long priceExecuted, long executionId, long matchId) {
+
+    	if (sizeExecuted > getOpenSize()) {
+
+    		sizeExecuted = getOpenSize();
+    	}
+
+    	this.executedSize += sizeExecuted;
+
+    	this.executeTime = time;
+
+    	int x = listeners.size();
+
+    	for(int i = x - 1; i >= 0; i--) {
+
+    		listeners.get(i).onOrderExecuted(time, this, execSide, sizeExecuted, priceExecuted, executionId, matchId);
+    	}
+
+    	if (isTerminal()) {
+
+        	for(int i = x - 1; i >= 0; i--) {
+
+        		listeners.get(i).onOrderTerminated(time, this);
+        	}
+
+    		listeners.clear();
+    	}
     }
     
     public void execute(long time, ExecuteSide execSide, long sizeToExecute, long priceExecuted, long executionId, long matchId) {

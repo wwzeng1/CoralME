@@ -21,6 +21,9 @@ import com.coralblocks.coralme.TimeInForce;
 import com.coralblocks.coralme.Type;
 import com.coralblocks.coralme.OrderBook;
 import com.coralblocks.coralme.OrderBookLogger;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
 
 public class Example {
 

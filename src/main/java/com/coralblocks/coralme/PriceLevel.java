@@ -15,94 +15,99 @@
  */
 package com.coralblocks.coralme;
 
-import com.coralblocks.coralme.Order.CancelReason;
-import com.coralblocks.coralme.Order.ExecuteSide;
-import com.coralblocks.coralme.Order.RejectReason;
-import com.coralblocks.coralme.Order.Side;
+import com.coralblocks.coralme.CancelReason;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
+import com.coralblocks.coralme.Side;
 
 public class PriceLevel implements OrderListener {
-    
+
     private long price;
-    
+
     private Side side;
-    
+
     private String security;
-    
+
     private long size;
-    
+
     private boolean sizeDirty;
-    
+
     private int orders;
-    
+
     private Order head = null;
-    
+
     private Order tail = null;
-    
+
     PriceLevel next = null;
-    
+
     PriceLevel prev = null;
-    
+
     public PriceLevel() {
-    	
+
     }
-    
+
     PriceLevel(String security, Side side, long price) {
-    	
+
     	init(security, side, price);
     }
-    
+
     public void init(String security, Side side, long price) {
-    	
+
     	this.security = security;
-    	
+
     	this.price = price;
-    	
+
     	this.side = side;
-    	
+
     	this.size = 0;
-    	
+
     	this.sizeDirty = false;
-    	
+
     	this.orders = 0;
-    	
+
     	this.head = this.tail = null;
-    	
+
     	this.next = this.prev = null;
     }
-    
+
     public final long getPrice() {
-    	
+
     	return price;
     }
 
     public final Side getSide() {
-    	
+
     	return side;
     }
-    
+
     public final String getSecurity() {
-    	
+
     	return security;
     }
-    
+
     public final int getOrders() {
-    	
+
     	return orders;
     }
-    
+
     public final boolean isEmpty() {
-    	
+
     	return orders == 0;
     }
-    
+
     public final Order head() {
-    	
+
     	return head;
     }
-    
+
     public final Order tail() {
-    	
+
     	return tail;
+    }
+
+    @Override
+    public void onOrderRejected(long time, Order order, RejectReason reason) {
+        // Implementation (can be empty if no action is required)
     }
     
     public void addOrder(Order order) {
