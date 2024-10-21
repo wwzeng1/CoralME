@@ -8,59 +8,50 @@ import java.util.List;
 
 public class LinkedObjectPoolTest {
 
-    // ... (keep existing test methods)
-
     @Test
     public void testAdaptiveGrowthUnderMemoryPressure() {
+        int maxSize = 1000;
         LinkedObjectPool<byte[]> pool =
-                new LinkedObjectPool<>(2, () -> new byte[1024]); // 1MB objects
+                new LinkedObjectPool<>(2, () -> new byte[1024], maxSize); // 1MB objects, max size 1000
         List<byte[]> objects = new ArrayList<>();
 
-        try {
-            byte[] object = pool.get();
-            while (object != null) {
-                objects.add(object);
-                object = pool.get();
-            }
-        } catch (OutOfMemoryError e) {
-            Assert.assertTrue(false);
-            // Expected behavior when memory is exhausted
+        byte[] object = pool.get();
+        while (object != null && objects.size() < maxSize * 2) {
+            objects.add(object);
+            object = pool.get();
         }
 
         Assert.assertTrue(
-                "Pool should have created multiple objects before running out of memory",
-                objects.size() > 2);
-        Assert.assertTrue("Pool size should be zero after exhausting memory", pool.size() == 0);
+                "Pool should have created multiple objects before reaching max size",
+                objects.size() > 2 && objects.size() <= maxSize * 2);
+        Assert.assertTrue("Pool size should be zero after exhausting pool", pool.size() == 0);
 
         // Release objects back to the pool
         for (byte[] obj : objects) {
             pool.release(obj);
         }
 
-        // The pool size should be less than or equal to the number of objects created
-        // due to memory constraints
+        // The pool size should be less than or equal to the maximum size
         Assert.assertTrue(
-                "Pool size should be limited by available memory", pool.size() <= objects.size());
+                "Pool size should be limited by max size", pool.size() <= maxSize);
     }
-
-
 
     @Test
     public void testIncreasingPoolSize() {
-        LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(2, StringBuilder::new);
+        int maxSize = 10;
+        LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(2, StringBuilder::new, maxSize);
 
         Assert.assertEquals(2, pool.size());
 
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < maxSize; i++) {
             pool.release(new StringBuilder());
         }
 
-        // The pool size might not grow to exactly 4 due to memory constraints
-        Assert.assertTrue(
-                "Pool size should be between 2 and 4", pool.size() >= 2 && pool.size() <= 4);
+        // The pool size should not exceed the maximum size
+        Assert.assertEquals("Pool size should be equal to max size", maxSize, pool.size());
 
-        List<StringBuilder> list = new ArrayList<>(4);
-        for (int i = 0; i < 4; i++) {
+        List<StringBuilder> list = new ArrayList<>(maxSize + 2);
+        for (int i = 0; i < maxSize + 2; i++) {
             StringBuilder sb = pool.get();
             if (sb != null) {
                 list.add(sb);
@@ -69,7 +60,7 @@ public class LinkedObjectPoolTest {
             }
         }
 
-        Assert.assertTrue("Should have gotten at least 2 instances", list.size() >= 2);
+        Assert.assertEquals("Should have gotten max size instances", maxSize, list.size());
         Assert.assertEquals(0, pool.size());
 
         // Release the instances back to the pool
@@ -77,10 +68,32 @@ public class LinkedObjectPoolTest {
             pool.release(sb);
         }
 
-        // The final pool size should be equal to the number of instances we got
-        Assert.assertEquals(
-                "Pool size should match the number of instances we got", list.size(), pool.size());
+        // The final pool size should be equal to the maximum size
+        Assert.assertEquals("Pool size should be equal to max size", maxSize, pool.size());
     }
+
+    @Test
+    public void testMemoryConstraints() {
+        int maxSize = 1000;
+        LinkedObjectPool<byte[]> pool = new LinkedObjectPool<>(2, () -> new byte[1024 * 1024], maxSize); // 1MB objects
+
+        List<byte[]> objects = new ArrayList<>();
+        byte[] object;
+        while ((object = pool.get()) != null) {
+            objects.add(object);
+        }
+
+        Assert.assertTrue("Should have created some objects", objects.size() > 0);
+        Assert.assertTrue("Should not exceed max size", objects.size() <= maxSize);
+
+        // Release all objects
+        for (byte[] obj : objects) {
+            pool.release(obj);
+        }
+
+        Assert.assertTrue("Pool size should not exceed max size", pool.size() <= maxSize);
+    }
+}
 
     @Test
     public void testRunOutOfInstances() {

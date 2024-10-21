@@ -42,9 +42,9 @@ public class OrderBook implements OrderListener {
 
 	public static enum State { NORMAL, LOCKED, CROSSED, ONESIDED, EMPTY }
 
-	private final ObjectPool<Order> orderPool = new LinkedObjectPool<>(8, Order::new);
+	private final ObjectPool<Order> orderPool;
 
-	private final ObjectPool<PriceLevel> priceLevelPool = new LinkedObjectPool<>(8, PriceLevel::new);
+	private final ObjectPool<PriceLevel> priceLevelPool;
 
 	private long execId = 0;
 
@@ -114,6 +114,9 @@ public class OrderBook implements OrderListener {
 		this.allowTradeToSelf = allowTradeToSelf;
 
 		if (listener != null) listeners.add(listener);
+
+		this.orderPool = new LinkedObjectPool<>(8, Order::new, 1000); // Set a maximum size of 1000
+		this.priceLevelPool = new LinkedObjectPool<>(8, PriceLevel::new, 100); // Set a maximum size of 100
 	}
 
 	public void addListener(OrderBookListener listener) {
@@ -476,74 +479,82 @@ public class OrderBook implements OrderListener {
 	}
 	
 	private final PriceLevel findPriceLevel(Side side, long price) {
-		
+
 		PriceLevel foundPriceLevel = null;
-		
+
 		int index = side.index();
-		
+
 		for(PriceLevel pl = head[index]; pl != null; pl = pl.next) {
-			
+
 			if (side.isInside(price, pl.getPrice())) {
-				
+
 				foundPriceLevel = pl;
-				
+
 				break;
 			}
 		}
-		
+
 		PriceLevel priceLevel;
-		
+
 		if (foundPriceLevel == null) {
-			
+
 			priceLevel = priceLevelPool.get();
+			if (priceLevel == null) {
+				// If pool is exhausted, create a new PriceLevel without adding it to the pool
+				priceLevel = new PriceLevel();
+			}
 
 			priceLevel.init(security, side, price);
-			
+
 			levels[index]++;
-			
+
 			if (head[index] == null) {
-				
+
 				head[index] = tail[index] = priceLevel;
-				
+
 				priceLevel.next = priceLevel.prev = null;
-				
+
 			} else {
-				
+
 				tail[index].next = priceLevel;
-				
+
 				priceLevel.prev = tail[index];
-				
+
 				priceLevel.next = null;
-				
+
 				tail[index] = priceLevel;
 			}
-			
+
 		} else if (foundPriceLevel.getPrice() != price) {
-			
+
 			priceLevel = priceLevelPool.get();
-			
+			if (priceLevel == null) {
+				// If pool is exhausted, create a new PriceLevel without adding it to the pool
+				priceLevel = new PriceLevel();
+			}
+
 			priceLevel.init(security, side, price);
-			
+
 			levels[index]++;
 
 			if (foundPriceLevel.prev != null) {
-				
+
 				foundPriceLevel.prev.next = priceLevel;
-				
+
 				priceLevel.prev = foundPriceLevel.prev;
 			}
 
 			priceLevel.next = foundPriceLevel;
-			
+
 			foundPriceLevel.prev = priceLevel;
-			
+
 			if (head[index] == foundPriceLevel) {
-				
+
 				head[index] = priceLevel;
 			}
-			
+
 		} else {
-			
+
 			priceLevel = foundPriceLevel;
 		}
 
@@ -758,59 +769,66 @@ public class OrderBook implements OrderListener {
 	}
 	
 	private Order getOrder(long clientId, CharSequence clientOrderId, String security, Side side, long size, long price, Type type, TimeInForce tif) {
-		
+
 		Order order = orderPool.get();
-		
+		if (order == null) {
+			// If pool is exhausted, create a new order without adding it to the pool
+			order = new Order();
+		}
 		order.init(clientId, clientOrderId, 0, security, side, size, price, type, tif);
-		
+
 		order.addListener(this);
-		
+
 		return order;
 	}
-	
+
 	private void removeOrder(Order order) {
-		
+
 		PriceLevel priceLevel = order.getPriceLevel();
-		
+
 		if (priceLevel != null && priceLevel.isEmpty()) {
-			
+
 			// remove priceLevel...
-			
+
 			if (priceLevel.prev != null) {
-				
+
 				priceLevel.prev.next = priceLevel.next;
 			}
-			
+
 			if (priceLevel.next != null) {
-				
+
 				priceLevel.next.prev = priceLevel.prev;
 			}
-			
+
 			int index = order.getSide().index();
-			
+
 			if (tail[index] == priceLevel) {
-				
+
 				tail[index] = priceLevel.prev;
 			}
-			
+
 			if (head[index] == priceLevel) {
-				
+
 				head[index] = priceLevel.next;
 			}
-			
+
 			levels[index]--;
-			
+
 			priceLevelPool.release(priceLevel);
 		}
-		
+
 		orders.remove(order.getId());
-		
+
 		orderPool.release(order);
 	}
-	
+
+	private void removePriceLevel(PriceLevel priceLevel) {
+		priceLevelPool.release(priceLevel);
+	}
+
 	@Override
     public void onOrderReduced(long time, Order order, long newSize) {
-		
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
@@ -820,9 +838,9 @@ public class OrderBook implements OrderListener {
 
 	@Override
     public void onOrderCanceled(long time, Order order, CancelReason reason) {
-		
+
 		removeOrder(order);
-		
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
@@ -832,12 +850,12 @@ public class OrderBook implements OrderListener {
 
 	@Override
     public void onOrderExecuted(long time, Order order, ExecuteSide execSide, long sizeExecuted, long priceExecuted, long executionId, long matchId) {
-		
+
 		if (order.isTerminal()) {
-			
+
 			removeOrder(order);
 		}
-		
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
@@ -847,15 +865,15 @@ public class OrderBook implements OrderListener {
 
 	@Override
 	public void onOrderAccepted(long time, Order order) {
-		
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
 			listeners.get(i).onOrderAccepted(this, time, order);
 		}
-		
+
 	}
-	
+
 	@Override
 	public void onOrderRejected(long time, Order order, RejectReason reason) {
 

@@ -35,16 +35,19 @@ public final class LinkedObjectPool<E> implements ObjectPool<E>, MemoryCallback 
     private volatile boolean isMemoryAvailable = true;
     private final MemoryMonitor memoryMonitor;
     private static final double MEMORY_THRESHOLD = 0.05; // 5% of max memory
+    private final int maxSize;
 
     /**
      * Creates a LinkedObjectPool with adaptive memory management.
      *
      * @param initialSize the initial size of the pool (how many instances it will initially have)
      * @param s the supplier that will be used to create the instances
+     * @param maxSize the maximum size of the pool
      */
-    public LinkedObjectPool(int initialSize, Supplier<? extends E> s) {
+    public LinkedObjectPool(int initialSize, Supplier<? extends E> s, int maxSize) {
         supplier = s;
         queue = new LinkedObjectList<>(initialSize);
+        this.maxSize = maxSize;
 
         for (int i = 0; i < initialSize; i++) {
             queue.addLast(supplier.get());
@@ -93,12 +96,11 @@ public final class LinkedObjectPool<E> implements ObjectPool<E>, MemoryCallback 
      */
     @Override
     public final void release(E e) {
-
-        queue.addLast(e);
-
-        // If memory is not available, the object is discarded and left for garbage collection
+        if (queue.size() < maxSize) {
+            queue.addLast(e);
+        }
+        // If the pool is at maximum capacity, the object is discarded and left for garbage collection
     }
-
 
     /**
      * Updates the available memory. This method is called by the MemoryMonitor.
@@ -107,6 +109,12 @@ public final class LinkedObjectPool<E> implements ObjectPool<E>, MemoryCallback 
      */
     public void updateIsMemoryAvailable(boolean isMemoryAvailable) {
          this.isMemoryAvailable = isMemoryAvailable;
+         if (!isMemoryAvailable) {
+             // Aggressively reduce pool size when memory is low
+             while (queue.size() > maxSize / 2) {
+                 queue.removeLast();
+             }
+         }
     }
 
     /** Stops the memory monitor thread. Should be called when the pool is no longer needed. */
