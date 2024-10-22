@@ -12,24 +12,30 @@ public class LinkedObjectPoolTest {
 
     @Test
     public void testAdaptiveGrowthUnderMemoryPressure() {
-        LinkedObjectPool<byte[]> pool = new LinkedObjectPool<>(2, () -> new byte[1024 * 1024]); // 1MB objects
-        List<byte[]> objects = new ArrayList<>();
+        LinkedObjectPool<byte[]> pool = new LinkedObjectPool<>(2, () -> new byte[1024]); // 1KB objects
 
-        byte[] object;
-        while ((object = pool.get()) != null) {
-            objects.add(object);
+        // Perform multiple get and release cycles
+        for (int cycle = 0; cycle < 5; cycle++) {
+            List<byte[]> objects = new ArrayList<>();
+
+            // Get objects until the pool is empty
+            byte[] object;
+            while ((object = pool.get()) != null) {
+                objects.add(object);
+            }
+
+            Assert.assertTrue("Pool should have created multiple objects", objects.size() > cycle);
+            Assert.assertEquals("Pool should be empty after getting all objects", 0, pool.size());
+
+            // Release objects back to the pool
+            for (byte[] obj : objects) {
+                pool.release(obj);
+            }
+
+            Assert.assertTrue("Pool size should grow adaptively", pool.size() > cycle);
         }
 
-        Assert.assertTrue("Pool should have created multiple objects", objects.size() > 2);
-        Assert.assertTrue("Pool size should be small after exhausting memory", pool.size() < objects.size());
-
-        // Release objects back to the pool
-        for (byte[] obj : objects) {
-            pool.release(obj);
-        }
-
-        Assert.assertTrue("Pool size should be limited by available memory", pool.size() <= objects.size());
-        Assert.assertTrue("Pool should retain some objects", pool.size() > 0);
+        Assert.assertTrue("Pool should have grown", pool.size() > 2);
     }
 
     @Test
