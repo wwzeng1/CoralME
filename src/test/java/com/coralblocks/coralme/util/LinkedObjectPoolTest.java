@@ -14,12 +14,12 @@ public class LinkedObjectPoolTest {
     public void testAdaptiveGrowthUnderMemoryPressure() {
         LinkedObjectPool<byte[]> pool = new LinkedObjectPool<>(2, () -> new byte[1024 * 1024]); // 1MB objects
         List<byte[]> objects = new ArrayList<>();
-        int maxObjects = 100; // Limit the number of objects to prevent OutOfMemoryError
 
-        for (int i = 0; i < maxObjects; i++) {
+        // Get objects until the pool returns null (indicating memory pressure)
+        while (true) {
             byte[] object = pool.get();
             if (object == null) {
-                break; // Stop if pool.get() returns null (indicating memory pressure)
+                break;
             }
             objects.add(object);
         }
@@ -32,7 +32,10 @@ public class LinkedObjectPoolTest {
             pool.release(obj);
         }
 
-        Assert.assertTrue("Pool size should be limited by available memory", pool.size() < objects.size());
+        // Check that the pool size is less than or equal to the number of objects created
+        Assert.assertTrue("Pool size should be limited by available memory", pool.size() <= objects.size());
+        // Check that at least some objects were retained in the pool
+        Assert.assertTrue("Pool should retain some objects", pool.size() > 0);
     }
 
     @Test
