@@ -3,13 +3,13 @@ package com.coralblocks.coralme.util;
 import java.util.function.Supplier;
 
 /**
- * An object pool backed by a preallocated array to minimize latency. Instances are created upfront but can also be created on demand if the pool is empty.
+ * An object pool backed by a pre-allocated array to minimize latency. Instances are created upfront but can also be created on demand if the pool is empty.
  *
  * <p><b>NOTE:</b> This data structure is designed to be used by <b>single-threaded systems</b>; it is not thread-safe.</p>
  *
  * <h2>Ultra-Low Latency Considerations:</h2>
  * <ul>
- *   <li><b>Preallocated Array:</b> Uses a preallocated array to improve cache locality and eliminate runtime allocations during normal operation.</li>
+ *   <li><b>Pre-allocated Array:</b> Uses a pre-allocated array to improve cache locality and eliminate runtime allocations during normal operation.</li>
  *   <li><b>Supplier Instead of Reflection:</b> Utilizes a {@code Supplier<E>} for object creation to avoid the overhead associated with reflection and exception handling.</li>
  *   <li><b>Final Variables:</b> Class fields are declared as {@code final} where applicable to allow for potential compiler optimizations.</li>
  *   <li><b>Avoid Runtime Allocations:</b> The pool minimizes runtime allocations by reusing objects and only creating new ones when necessary.</li>
@@ -63,7 +63,7 @@ public final class ArrayObjectPool<E> implements ObjectPool<E> {
     }
 
     /**
-     * Creates an ArrayObjectPool with preallocated instances and a preallocated backup pool.
+     * Creates an ArrayObjectPool with pre-allocated instances and a pre-allocated backup pool.
      *
      * @param size           the initial and maximum size of the pool
      * @param backupPoolSize the size of the backup pool
@@ -79,7 +79,7 @@ public final class ArrayObjectPool<E> implements ObjectPool<E> {
 
         index = size - 1;
 
-        // Initialize backupPool with preallocated instances to avoid runtime allocation
+        // Initialize backupPool with pre-allocated instances to avoid runtime allocation
         backupPool = new LinkedObjectPool<>(backupPoolSize, supplier);
     }
 
@@ -90,10 +90,11 @@ public final class ArrayObjectPool<E> implements ObjectPool<E> {
          */
     @Override
     public E get() {
+
         if (index >= 0) {
             return (E) pool[index--];
         }
-        // Get from backupPool without creating new instances at runtime
+
         return backupPool.get();
     }
 
@@ -104,11 +105,13 @@ public final class ArrayObjectPool<E> implements ObjectPool<E> {
      */
     @Override
     public void release(E e) {
+
         if (index < pool.length - 1) {
-            pool[ ++index] = e;
+            pool[++index] = e;
         } else {
             backupPool.release(e);
         }
+
     }
 
     /**
