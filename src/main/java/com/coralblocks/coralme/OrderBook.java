@@ -20,82 +20,82 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.coralblocks.coralme.Order.CancelReason;
-import com.coralblocks.coralme.Order.ExecuteSide;
-import com.coralblocks.coralme.Order.RejectReason;
-import com.coralblocks.coralme.Order.Side;
-import com.coralblocks.coralme.Order.TimeInForce;
-import com.coralblocks.coralme.Order.Type;
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.LinkedObjectPool;
 import com.coralblocks.coralme.util.LongMap;
 import com.coralblocks.coralme.util.ObjectPool;
 import com.coralblocks.coralme.util.SystemTimestamper;
 import com.coralblocks.coralme.util.Timestamper;
+import com.coralblocks.coralme.Side;
+import com.coralblocks.coralme.TimeInForce;
+import com.coralblocks.coralme.Type;
+import com.coralblocks.coralme.ExecuteSide;
+import com.coralblocks.coralme.RejectReason;
+import com.coralblocks.coralme.CancelReason;
 
 public class OrderBook implements OrderListener {
-	
+
 	private static final boolean DEFAULT_ALLOW_TRADE_TO_SELF = true;
-	
+
 	private static final Timestamper TIMESTAMPER = new SystemTimestamper();
-	
+
 	public static enum State { NORMAL, LOCKED, CROSSED, ONESIDED, EMPTY }
-	
+
 	private final ObjectPool<Order> orderPool = new ArrayObjectPool<Order>(32, Order::new);
-	
+
 	private final ObjectPool<PriceLevel> priceLevelPool = new ArrayObjectPool<PriceLevel>(32, PriceLevel::new);
-	
+
 	private long execId = 0;
-	
+
 	private long matchId = 0;
-	
+
 	private PriceLevel[] head = new PriceLevel[2];
-	
+
 	private PriceLevel[] tail = new PriceLevel[2];
-	
+
 	private int[] levels = new int[] { 0, 0 };
-	
+
 	private final LongMap<Order> orders = new LongMap<Order>();
-	
+
 	private final String security;
-	
+
 	private long lastExecutedPrice = Long.MAX_VALUE;
-	
+
 	private final List<OrderBookListener> listeners = new ArrayList<OrderBookListener>(8);
-	
+
 	private final Timestamper timestamper;
-	
+
 	private final boolean allowTradeToSelf;
-	
-	
+
+
 	public OrderBook(String security, boolean allowTradeToSelf) {
 		this(security, TIMESTAMPER, null, allowTradeToSelf);
 	}
-	
+
 	public OrderBook(String security) {
 		this(security, TIMESTAMPER, null);
 	}
-	
+
 	public OrderBook(String security, Timestamper timestamper, boolean allowTradeToSelf) {
 		this(security, timestamper, null, allowTradeToSelf);
 	}
-	
+
 	public OrderBook(String security, Timestamper timestamper) {
 		this(security, timestamper, null);
 	}
-	
+
 	public OrderBook(String security, OrderBookListener listener, boolean allowTradeToSelf) {
 		this(security, TIMESTAMPER, listener, allowTradeToSelf);
 	}
-	
+
 	public OrderBook(String security, OrderBookListener listener) {
 		this(security, TIMESTAMPER, listener);
 	}
-	
+
 	public OrderBook(String security, Timestamper timestamper, OrderBookListener listener) {
 		this(security, timestamper, listener, DEFAULT_ALLOW_TRADE_TO_SELF);
 	}
-	
+
 	public OrderBook(OrderBook orderBook) {
 		this(orderBook.getSecurity(), orderBook.getTimestamper(), null, orderBook.isAllowTradeToSelf());
 		 List<OrderBookListener> listeners = orderBook.getListeners();
@@ -105,105 +105,105 @@ public class OrderBook implements OrderListener {
 	}
 
 	public OrderBook(String security, Timestamper timestamper, OrderBookListener listener, boolean allowTradeToSelf) {
-		
+
 		this.security = security;
-		
+
 		this.timestamper = timestamper;
-		
+
 		this.allowTradeToSelf = allowTradeToSelf;
-		
+
 		if (listener != null) listeners.add(listener);
 	}
-	
+
 	public void addListener(OrderBookListener listener) {
 		if (!listeners.contains(listener)) listeners.add(listener);
 	}
-	
+
 	public void removeListener(OrderBookListener listener) {
 		listeners.remove(listener);
 	}
-	
+
 	public List<OrderBookListener> getListeners() {
 		return listeners;
 	}
-	
+
 	public final boolean isAllowTradeToSelf() {
 		return allowTradeToSelf;
 	}
-	
+
 	public Timestamper getTimestamper() {
 		return timestamper;
 	}
-	
+
 	public String getSecurity() {
-		
+
 		return security;
 	}
-	
+
 	public final Order getBestBidOrder() {
-		
+
 		if (!hasBids()) return null;
-		
+
 		PriceLevel pl = head(Side.BUY);
-		
+
 		return pl.head();
 	}
-	
+
 	public final Order getBestAskOrder() {
-		
+
 		if (!hasAsks()) return null;
-		
+
 		PriceLevel pl = head(Side.SELL);
-				
+
 		return pl.head();
 	}
-	
+
 	public final LongMap<Order> getOrders() {
 		return orders;
 	}
-	
+
 	public final Order getOrder(long id) {
-		
+
 		return orders.get(id);
 	}
-	
+
 	public final int getNumberOfOrders() {
-		
+
 		return orders.size();
 	}
-	
+
 	public final boolean isEmpty() {
 
 		return orders.isEmpty();
 	}
-	
+
 	public final PriceLevel head(Side side) {
-		
+
 		return head[side.index()];
 	}
-	
+
 	public final PriceLevel tail(Side side) {
-		
+
 		return tail[side.index()];
 	}
-	
+
 	public long getLastExecutedPrice() {
-		
+
 		return lastExecutedPrice;
 	}
-	
+
 	public final boolean hasSpread() {
 		return hasBestBid() && hasBestAsk();
 	}
-	
+
 	public final long getSpread() {
-		
+
 		PriceLevel bestBid = head[Side.BUY.index()];
-		
+
 		PriceLevel bestAsk = head[Side.SELL.index()];
-		
+
 		assert bestBid != null && bestAsk != null;
-		
+
 		return bestAsk.getPrice() - bestBid.getPrice();
 	}
 	
@@ -830,36 +830,36 @@ public class OrderBook implements OrderListener {
     }
 
 	@Override
-    public void onOrderExecuted(long time, Order order, ExecuteSide execSide, long sizeExecuted, long priceExecuted, long executionId, long matchId) {
-		
+    public void onOrderExecuted(long time, Order order, ExecuteSide executeSide, long executeSize, long executePrice, long executeId, long executeMatchId) {
+
 		if (order.isTerminal()) {
-			
+
 			removeOrder(order);
 		}
-		
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
-			listeners.get(i).onOrderExecuted(this, time, order, execSide, sizeExecuted, priceExecuted, executionId, matchId);
+			listeners.get(i).onOrderExecuted(this, time, order, executeSide, executeSize, executePrice, executeId, executeMatchId);
 		}
     }
 
 	@Override
 	public void onOrderAccepted(long time, Order order) {
-		
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
 			listeners.get(i).onOrderAccepted(this, time, order);
 		}
-		
+
 	}
-	
+
 	@Override
-	public void onOrderRejected(long time, Order order, Order.RejectReason reason) {
-	
+	public void onOrderRejected(long time, Order order, RejectReason reason) {
+
 		removeOrder(order);
-		
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
@@ -869,24 +869,24 @@ public class OrderBook implements OrderListener {
 
 	@Override
     public void onOrderRested(long time, Order order, long restSize, long restPrice) {
-	    
+
 		int size = listeners.size();
 
 		for(int i = 0; i < size; i++) {
 			listeners.get(i).onOrderRested(this, time, order, restSize, restPrice);
 		}
     }
-	
+
 	@Override
 	public void onOrderTerminated(long time, Order order) {
-		
+
 		int size = listeners.size();
-		
+
 		for(int i = 0; i < size; i++) {
 			listeners.get(i).onOrderTerminated(this, time, order);
 		}
 	}
-	
+
 	@Override
 	public String toString() {
 		return security;
