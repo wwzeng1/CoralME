@@ -115,8 +115,9 @@ public class OrderBook implements OrderListener {
 
 		if (listener != null) listeners.add(listener);
 
-		this.orderPool = new LinkedObjectPool<>(8, Order::new, 1000); // Set a maximum size of 1000
-		this.priceLevelPool = new LinkedObjectPool<>(8, PriceLevel::new, 100); // Set a maximum size of 100
+		// Set maximum pool sizes: 1000 for orders and 100 for price levels
+		this.orderPool = new LinkedObjectPool<>(8, Order::new, 1000);
+		this.priceLevelPool = new LinkedObjectPool<>(8, PriceLevel::new, 100);
 	}
 
 	public void addListener(OrderBookListener listener) {
@@ -210,204 +211,204 @@ public class OrderBook implements OrderListener {
 
 		return bestAsk.getPrice() - bestBid.getPrice();
 	}
-	
+
 	public final State getState() {
 
 		PriceLevel bestBid = head[Side.BUY.index()];
-		
+
 		PriceLevel bestAsk = head[Side.SELL.index()];
 
 		if (bestBid != null && bestAsk != null) {
-			
+
 			long spread = bestAsk.getPrice() - bestBid.getPrice();
-			
+
 			if (spread == 0) return State.LOCKED;
-			
+
 			if (spread < 0) return State.CROSSED;
-			
+
 			return State.NORMAL;
-			
+
 		} else if (bestBid == null && bestAsk == null) {
-			
+
 			return State.EMPTY;
-			
+
 		} else {
-			
+
 			return State.ONESIDED;
 		}
 	}
-	
+
 	public final boolean hasTop(Side side) {
-		
+
 		return side.isBuy() ? hasBestBid() : hasBestAsk();
 	}
-	
+
 	public final boolean hasAsks() {
 		return hasBestAsk();
 	}
-	
+
 	public final boolean hasBids() {
 		return hasBestBid();
 	}
-	
+
 	public final boolean hasBestBid() {
-		
+
 		return head[Side.BUY.index()] != null;
 	}
-	
+
 	public final boolean hasBestAsk() {
-		
+
 		return head[Side.SELL.index()] != null;
 	}
-	
+
 	public final long getBestPrice(Side side) {
-		
+
 		return side.isBuy() ? getBestBidPrice() : getBestAskPrice();
 	}
-	
+
 	public final long getBestBidPrice() {
-		
+
 		int index = Side.BUY.index();
-		
+
 		assert head[index] != null;
-		
+
 		return head[index].getPrice();
 	}
-	
+
 	public final long getBestAskPrice() {
-		
+
 		int index = Side.SELL.index();
-		
+
 		assert head[index] != null;
-		
+
 		return head[index].getPrice();
 	}
-	
+
 	public final long getBestSize(Side side) {
-		
+
 		return side.isBuy() ? getBestBidSize() : getBestAskSize();
 	}
-	
+
 	public final long getBestBidSize() {
-		
+
 		int index = Side.BUY.index();
-		
+
 		assert head[index] != null;
-		
+
 		return head[index].getSize();
 	}
-	
+
 	public final long getBestAskSize() {
-		
+
 		int index = Side.SELL.index();
-		
+
 		assert head[index] != null;
-		
+
 		return head[index].getSize();
 	}
-	
+
 	public final int getLevels(Side side) {
-		
+
 		return side.isBuy() ? getBidLevels() : getAskLevels();
 	}
-	
+
 	public final int getBidLevels() {
-		
+
 		return levels[Side.BUY.index()];
 	}
-	
+
 	public final int getAskLevels() {
-		
+
 		return levels[Side.SELL.index()];
 	}
-	
+
 	public void showOrders() {
 		System.out.println(orders());
 	}
-	
+
 	public void showLevels() {
 		System.out.println(levels());
 	}
-	
+
 	public String levels() {
 		StringBuilder sb = new StringBuilder(1024);
 		levels(sb);
 		return sb.toString();
 	}
-	
+
 	public String orders() {
 		StringBuilder sb = new StringBuilder(1024);
 		orders(sb);
 		return sb.toString();
 	}
-	
+
 	public void levels(StringBuilder sb, Side side) {
 
 		if (side == Side.SELL) {
-			
+
 			if (!hasAsks()) {
 				return;
 			}
-		
+
 			for(PriceLevel pl = head[side.index()]; pl != null; pl = pl.next) {
-				
+
 				String size = String.format("%6d", pl.getSize());
 				String price = String.format("%9.2f", DoubleUtils.toDouble(pl.getPrice()));
-				
+
 				sb.append(size).append(" @ ").append(price);
 				sb.append(" (orders=").append(pl.getOrders()).append(")\n");
 			}
-			
+
 		} else {
-			
+
 			if (!hasBids()) {
 				return;
 			}
-			
+
 			for(PriceLevel pl = tail[side.index()]; pl != null; pl = pl.prev) {
-				
+
 				String size = String.format("%6d", pl.getSize());
 				String price = String.format("%9.2f", DoubleUtils.toDouble(pl.getPrice()));
-				
+
 				sb.append(size).append(" @ ").append(price);
 				sb.append(" (orders=").append(pl.getOrders()).append(")\n");
 			}
 		}
 	}
-	
+
 	public void orders(StringBuilder sb, Side side) {
 
 		if (side == Side.SELL) {
-			
+
 			if (!hasAsks()) {
 				return;
 			}
-		
+
 			for(PriceLevel pl = head[side.index()]; pl != null; pl = pl.next) {
-				
+
 				for(Order o = pl.head(); o != null; o = o.next) {
 
 					String size = String.format("%6d", o.getOpenSize());
 					String price = String.format("%9.2f", DoubleUtils.toDouble(o.getPrice()));
-					
+
 					sb.append(size).append(" @ ").append(price);
 					sb.append(" (id=").append(o.getId()).append(")\n");
 				}
 			}
-			
+
 		} else {
-			
+
 			if (!hasBids()) {
 				return;
 			}
-			
+
 			for(PriceLevel pl = tail[side.index()]; pl != null; pl = pl.prev) {
-				
+
 				for(Order o = pl.head(); o != null; o = o.next) {
 
 					String size = String.format("%6d", o.getOpenSize());
 					String price = String.format("%9.2f", DoubleUtils.toDouble(o.getPrice()));
-					
+
 					sb.append(size).append(" @ ").append(price);
 					sb.append(" (id=").append(o.getId()).append(")\n");
 				}
