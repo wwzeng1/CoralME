@@ -32,7 +32,7 @@ public class LinkedObjectPoolTest {
 	@Test
 	public void testSameInstance() {
 
-		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(8, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(8, StringBuilder::new);
 
 		Assert.assertEquals(8, pool.size());
 
@@ -73,7 +73,7 @@ public class LinkedObjectPoolTest {
 	@Test
 	public void testRunOutOfInstances() {
 
-		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(2, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(2, StringBuilder::new);
 
 		Set<StringBuilder> set = new HashSet<StringBuilder>(2);
 
@@ -113,7 +113,7 @@ public class LinkedObjectPoolTest {
 	@Test
 	public void testIncreasingPoolSize() {
 
-		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(2, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(2, StringBuilder::new);
 
 		Assert.assertEquals(2, pool.size());
 
@@ -129,7 +129,7 @@ public class LinkedObjectPoolTest {
 	@Test
 	public void testLIFOForGoodCaching() {
 
-		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(2, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(2, StringBuilder::new);
 
 		Assert.assertEquals(2, pool.size());
 
@@ -146,7 +146,7 @@ public class LinkedObjectPoolTest {
 		final int THREAD_COUNT = 100;
 		final int OPERATIONS_PER_THREAD = 1000;
 
-		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(POOL_SIZE, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(POOL_SIZE, StringBuilder::new);
 		ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
 		CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
 		AtomicInteger totalOperations = new AtomicInteger(0);
@@ -181,7 +181,7 @@ public class LinkedObjectPoolTest {
 		final int INITIAL_SIZE = 5;
 		final int GROWTH_FACTOR = 3;
 
-		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(INITIAL_SIZE, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(INITIAL_SIZE, StringBuilder::new);
 
 		// Get all initial objects
 		for (int i = 0; i < INITIAL_SIZE; i++) {
@@ -202,7 +202,7 @@ public class LinkedObjectPoolTest {
 	@Test
 	public void testEdgeCases() {
 		// Test empty pool
-		LinkedObjectPool<StringBuilder> emptyPool = new LinkedObjectPool<>(0, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> emptyPool = new LinkedObjectPool<>(0, StringBuilder::new);
 		Assert.assertEquals(0, emptyPool.size());
 		StringBuilder sb = emptyPool.get();
 		Assert.assertNotNull(sb);
@@ -211,7 +211,7 @@ public class LinkedObjectPoolTest {
 
 		// Test very large pool
 		final int LARGE_SIZE = 1_000_000;
-		LinkedObjectPool<StringBuilder> largePool = new LinkedObjectPool<>(LARGE_SIZE, StringBuilder.class);
+		LinkedObjectPool<StringBuilder> largePool = new LinkedObjectPool<>(LARGE_SIZE, StringBuilder::new);
 		Assert.assertEquals(LARGE_SIZE, largePool.size());
 
 		// Get and release a large number of objects
@@ -228,15 +228,9 @@ public class LinkedObjectPoolTest {
 	public void testCustomBuilder() {
 		final int POOL_SIZE = 5;
 		final String PREFIX = "CustomObject_";
+		AtomicInteger counter = new AtomicInteger(0);
 
-		LinkedObjectPool<String> customPool = new LinkedObjectPool<>(POOL_SIZE, new LinkedObjectPool.Builder<String>() {
-			private int counter = 0;
-
-			@Override
-			public String newInstance() {
-				return PREFIX + (counter++);
-			}
-		});
+		LinkedObjectPool<String> customPool = new LinkedObjectPool<>(POOL_SIZE, () -> PREFIX + counter.getAndIncrement());
 
 		Assert.assertEquals(POOL_SIZE, customPool.size());
 
