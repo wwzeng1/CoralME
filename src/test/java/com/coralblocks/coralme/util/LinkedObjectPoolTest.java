@@ -111,8 +111,7 @@ public class LinkedObjectPoolTest {
         StringBuilder sb1 = pool.get();
         StringBuilder sb2 = pool.get();
 
-        Assert.assertTrue(
-                "Pool size should be between 0 and 1", pool.size() <= 1);
+        Assert.assertTrue("Pool size should be between 0", pool.size() == 1);
 
         Assert.assertTrue("sb1 should be in the original list", list.contains(sb1));
         Assert.assertTrue("sb2 should be in the original list", list.contains(sb2));
