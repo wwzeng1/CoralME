@@ -115,9 +115,9 @@ public class OrderBook implements OrderListener {
 
 		if (listener != null) listeners.add(listener);
 
-		// Initialize object pools without specifying maximum sizes
-		this.orderPool = new LinkedObjectPool<>(8, Order::new);
-		this.priceLevelPool = new LinkedObjectPool<>(8, PriceLevel::new);
+		// Initialize object pools with fixed sizes using ArrayObjectPool
+		this.orderPool = new ArrayObjectPool<>(32, Order::new);
+		this.priceLevelPool = new ArrayObjectPool<>(32, PriceLevel::new);
 	}
 
 	public void addListener(OrderBookListener listener) {
