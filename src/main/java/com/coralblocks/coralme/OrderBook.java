@@ -115,9 +115,9 @@ public class OrderBook implements OrderListener {
 
 		if (listener != null) listeners.add(listener);
 
-		// Set maximum pool sizes: 1000 for orders and 100 for price levels
-		this.orderPool = new LinkedObjectPool<>(8, Order::new, 1000);
-		this.priceLevelPool = new LinkedObjectPool<>(8, PriceLevel::new, 100);
+		// Initialize object pools without specifying maximum sizes
+		this.orderPool = new LinkedObjectPool<>(8, Order::new);
+		this.priceLevelPool = new LinkedObjectPool<>(8, PriceLevel::new);
 	}
 
 	public void addListener(OrderBookListener listener) {
@@ -415,9 +415,9 @@ public class OrderBook implements OrderListener {
 			}
 		}
 	}
-	
+
 	public void orders(StringBuilder sb) {
-		
+
 		if (hasBids()) orders(sb, Side.BUY);
 		if (hasSpread()) {
 			sb.append("-------- ");
@@ -428,9 +428,9 @@ public class OrderBook implements OrderListener {
 		}
 		if (hasAsks()) orders(sb, Side.SELL);
 	}
-	
+
 	public void levels(StringBuilder sb) {
-		
+
 		if (hasBids()) levels(sb, Side.BUY);
 		if (hasSpread()) {
 			sb.append("-------- ");
