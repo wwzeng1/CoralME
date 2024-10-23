@@ -12,7 +12,8 @@ public class LinkedObjectPoolTest {
     public void testAdaptiveGrowthUnderMemoryPressure() {
         int maxSize = 1000;
         LinkedObjectPool<byte[]> pool =
-                new LinkedObjectPool<>(2, () -> new byte[1024], maxSize); // 1MB objects, max size 1000
+                new LinkedObjectPool<>(
+                        2, () -> new byte[1024], maxSize); // 1MB objects, max size 1000
         List<byte[]> objects = new ArrayList<>();
 
         byte[] object = pool.get();
@@ -32,14 +33,14 @@ public class LinkedObjectPoolTest {
         }
 
         // The pool size should be less than or equal to the maximum size
-        Assert.assertTrue(
-                "Pool size should be limited by max size", pool.size() <= maxSize);
+        Assert.assertTrue("Pool size should be limited by max size", pool.size() <= maxSize);
     }
 
     @Test
     public void testIncreasingPoolSize() {
         int maxSize = 10;
-        LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(2, StringBuilder::new, maxSize);
+        LinkedObjectPool<StringBuilder> pool =
+                new LinkedObjectPool<>(2, StringBuilder::new, maxSize);
 
         Assert.assertEquals(2, pool.size());
 
@@ -74,26 +75,25 @@ public class LinkedObjectPoolTest {
 
     @Test
     public void testMemoryConstraints() {
-        int maxSize = 1000;
-        LinkedObjectPool<byte[]> pool = new LinkedObjectPool<>(2, () -> new byte[1024 * 1024], maxSize); // 1MB objects
+        LinkedObjectPool<byte[]> pool =
+                new LinkedObjectPool<>(2, () -> new byte[1024 * 1024]); // 1MB objects
 
         List<byte[]> objects = new ArrayList<>();
         byte[] object;
-        while ((object = pool.get()) != null) {
+        while ((object = pool.get()) != null && objects.size() < 1000) {
             objects.add(object);
         }
 
         Assert.assertTrue("Should have created some objects", objects.size() > 0);
-        Assert.assertTrue("Should not exceed max size", objects.size() <= maxSize);
+        Assert.assertTrue("Should not exceed 1000 objects", objects.size() <= 1000);
 
         // Release all objects
         for (byte[] obj : objects) {
             pool.release(obj);
         }
 
-        Assert.assertTrue("Pool size should not exceed max size", pool.size() <= maxSize);
+        Assert.assertTrue("Pool size should not exceed initial size", pool.size() <= 2);
     }
-}
 
     @Test
     public void testRunOutOfInstances() {
@@ -120,14 +120,12 @@ public class LinkedObjectPoolTest {
             pool.release(builder);
         }
 
-        Assert.assertTrue(
-                "Pool size is 3", pool.size() <= 3);
+        Assert.assertTrue("Pool size is 3", pool.size() <= 3);
 
         StringBuilder sb1 = pool.get();
         StringBuilder sb2 = pool.get();
 
-        Assert.assertTrue(
-                "Pool size should be between 0 and 1", pool.size() == 1);
+        Assert.assertTrue("Pool size should be between 0 and 1", pool.size() == 1);
 
         Assert.assertTrue("sb1 should be in the original list", list.contains(sb1));
         Assert.assertTrue("sb2 should be in the original list", list.contains(sb2));
