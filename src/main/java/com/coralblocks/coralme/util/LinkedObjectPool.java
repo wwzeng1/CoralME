@@ -16,6 +16,7 @@
 package com.coralblocks.coralme.util;
 
 import java.util.function.Supplier;
+import java.util.function.Consumer;
 
 /**
  * An object pool backed up by an internal linked list with adaptive memory management. Instances
@@ -28,7 +29,7 @@ import java.util.function.Supplier;
  *
  * @param <E> the type of objects this object pool will hold
  */
-public final class LinkedObjectPool<E> implements ObjectPool<E>, MemoryCallback {
+public final class LinkedObjectPool<E> implements ObjectPool<E> {
 
     private final LinkedObjectList<E> queue;
     private final Supplier<? extends E> supplier;
@@ -50,7 +51,7 @@ public final class LinkedObjectPool<E> implements ObjectPool<E>, MemoryCallback 
             queue.addLast(supplier.get());
         }
 
-        memoryMonitor = new MemoryMonitor(this, 0.05, 1000); // 5 percent
+        memoryMonitor = new MemoryMonitor(this::updateIsMemoryAvailable, 0.05, 1000); // 5 percent
         memoryMonitor.start();
     }
 
@@ -105,7 +106,7 @@ public final class LinkedObjectPool<E> implements ObjectPool<E>, MemoryCallback 
      *
      * @param isMemoryAvailable the current available memory
      */
-    public void updateIsMemoryAvailable(boolean isMemoryAvailable) {
+    private void updateIsMemoryAvailable(boolean isMemoryAvailable) {
          this.isMemoryAvailable = isMemoryAvailable;
     }
 

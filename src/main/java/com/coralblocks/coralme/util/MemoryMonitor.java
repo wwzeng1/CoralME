@@ -3,6 +3,7 @@ package com.coralblocks.coralme.util;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.util.function.Consumer;
 
 /**
  * A utility class that monitors memory usage and updates a callback with the current
@@ -10,7 +11,7 @@ import java.lang.management.MemoryUsage;
  */
 public final class MemoryMonitor {
 
-    private final MemoryCallback callback;
+    private final Consumer<Boolean> callback;
     private final long frequency;
 
     private final MemoryMXBean memoryMXBean;
@@ -23,11 +24,11 @@ public final class MemoryMonitor {
     /**
      * Creates a new MemoryMonitor for the given callback.
      *
-     * @param callback the MemoryCallback to update with memory information
+     * @param callback the Consumer<Boolean> to update with memory information
      * @param percentage the minimum percentage of memory that should be available
      * @param frequency the frequency at which to check memory usage, in milliseconds
      */
-    MemoryMonitor(MemoryCallback callback, double percentage, long frequency) {
+    MemoryMonitor(Consumer<Boolean> callback, double percentage, long frequency) {
         this.callback = callback;
         this.memoryMXBean = ManagementFactory.getMemoryMXBean();
         this.frequency = frequency;
@@ -57,7 +58,7 @@ public final class MemoryMonitor {
 
             MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
             long availableMemory = heapMemoryUsage.getMax() - heapMemoryUsage.getUsed();
-            callback.updateIsMemoryAvailable(availableMemory > minMemory);
+            callback.accept(availableMemory > minMemory);
 
             try {
                 Thread.sleep(frequency);
