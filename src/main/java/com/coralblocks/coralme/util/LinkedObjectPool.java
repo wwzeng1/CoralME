@@ -57,6 +57,10 @@ public final class LinkedObjectPool<E> implements ObjectPool<E>, MemoryCallback 
         memoryMonitor.start();
     }
 
+    public LinkedObjectPool(int initialSize, Supplier<? extends E> s) {
+        this(initialSize, s, Integer.MAX_VALUE);
+    }
+
     /**
      * The number of instances currently inside this pool. Note that if all the instances are
      * checked-out from this pool, the size returned will be zero.
