@@ -31,6 +31,7 @@ import org.junit.Test;
 
 public class LinkedObjectPoolTest {
 
+
 	@Test
 	public void testSameInstance() {
 
