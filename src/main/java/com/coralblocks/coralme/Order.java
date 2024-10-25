@@ -74,6 +74,35 @@ public class Order {
 
     private long pendingSize;
 
+    public static final class Side extends com.coralblocks.coralme.Side {
+        private Side() {} // Prevent instantiation
+    }
+
+    public static final class TimeInForce extends com.coralblocks.coralme.TimeInForce {
+        private TimeInForce() {}
+    }
+
+    public static final class Type extends com.coralblocks.coralme.Type {
+        private Type() {}
+    }
+
+    public static final class ExecuteSide extends com.coralblocks.coralme.ExecuteSide {
+        private ExecuteSide() {}
+    }
+
+    public static final class CancelReason extends com.coralblocks.coralme.CancelReason {
+        private CancelReason() {}
+    }
+
+    public static final class RejectReason extends com.coralblocks.coralme.RejectReason {
+        private RejectReason() {}
+    }
+
+    public static final class CancelRejectReason
+            extends com.coralblocks.coralme.CancelRejectReason {
+        private CancelRejectReason() {}
+    }
+
     public Order() {}
 
     public void init(
