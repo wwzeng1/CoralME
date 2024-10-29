@@ -18,10 +18,8 @@ package com.coralblocks.coralme;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.coralblocks.coralme.util.CharEnum;
-import com.coralblocks.coralme.util.CharMap;
+import com.coralblocks.coralme.enums.*;
 import com.coralblocks.coralme.util.DoubleUtils;
-import com.coralblocks.coralme.util.StringUtils;
 
 public class Order {
 
@@ -364,7 +362,6 @@ public class Order {
         
         listeners.clear();
     }
-    
     public void reduceTo(long time, long newTotalSize) {
     	
     	if (newTotalSize <= executedSize) {
@@ -478,200 +475,6 @@ public class Order {
     		listeners.clear();
     	}
     }
-    
-	public static enum TimeInForce implements CharEnum { 
-
-		GTC 			('T', "1"), 
-		IOC				('I', "3"),
-		DAY				('D', "0");
-
-		private final char b;
-		private final String fixCode;
-		public final static CharMap<TimeInForce> ALL = new CharMap<TimeInForce>();
-		
-		static {
-			for(TimeInForce tif : TimeInForce.values()) {
-				if (ALL.put(tif.getChar(), tif) != null) throw new IllegalStateException("Duplicate: " + tif);
-			}
-		}
-		
-		private TimeInForce(char b, String fixCode) {
-			this.b = b;
-			this.fixCode = fixCode;
-		}
-		
-		public static final TimeInForce fromFixCode(CharSequence sb) {
-			for(TimeInForce s : TimeInForce.values()) {
-				if (StringUtils.equals(s.getFixCode(), sb)) {
-					return s;
-				}
-			}
-			return null;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-    	
-    	public final String getFixCode() {
-    		return fixCode;
-    	}
-	}
-	
-	public static enum RejectReason implements CharEnum { 
-
-		MISSING_FIELD		('1'),
-		BAD_TYPE			('2'),
-		BAD_TIF				('3'),
-		BAD_SIDE			('4'),
-		BAD_SYMBOL			('5'),
-		
-		BAD_PRICE 			('P'), 
-		BAD_SIZE			('S'),
-		TRADING_HALTED		('H'),
-		BAD_LOT				('L'),
-		UNKNOWN_SYMBOL		('U'),
-		DUPLICATE_EXCHANGE_ORDER_ID	('E'),
-		DUPLICATE_CLIENT_ORDER_ID ('C');
-
-		private final char b;
-		public final static CharMap<RejectReason> ALL = new CharMap<RejectReason>();
-		
-		static {
-			for(RejectReason rr : RejectReason.values()) {
-				if (ALL.put(rr.getChar(), rr) != null) throw new IllegalStateException("Duplicate: " + rr);
-			}
-		}
-		
-		private RejectReason(char b) {
-			this.b = b;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-	}
-
-	public static enum CancelRejectReason implements CharEnum {
-		
-		NOT_FOUND		('F');
-		
-		private final char b;
-		public final static CharMap<CancelRejectReason> ALL = new CharMap<CancelRejectReason>();
-		
-		static {
-			for(CancelRejectReason crr : CancelRejectReason.values()) {
-				if (ALL.put(crr.getChar(), crr) != null) throw new IllegalStateException("Duplicate: " + crr);
-			}
-		}
-		
-		private CancelRejectReason(char b) {
-			this.b = b;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-	}
-	
-	public static enum CancelReason implements CharEnum { 
-
-		MISSED 			('M'), 
-		USER			('U'),
-		NO_LIQUIDITY	('L'),
-		PRICE			('E'),
-		CROSSED			('C'),
-		PURGED			('P'),
-		EXPIRED			('D'),
-		ROLLED			('R');
-
-		private final char b;
-		public final static CharMap<CancelReason> ALL = new CharMap<CancelReason>();
-		
-		static {
-			for(CancelReason cr : CancelReason.values()) {
-				if (ALL.put(cr.getChar(), cr) != null) throw new IllegalStateException("Duplicate: " + cr);
-			}
-		}
-		
-		private CancelReason(char b) {
-			this.b = b;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-	}
-	
-	public static enum ReduceRejectReason implements CharEnum { 
-
-		ZERO 			('Z'), 
-		NEGATIVE		('N'),
-		INCREASE		('I'),
-		SUPERFLUOUS		('S'),
-		NOT_FOUND		('F');
-
-		private final char b;
-		public final static CharMap<ReduceRejectReason> ALL = new CharMap<ReduceRejectReason>();
-		
-		static {
-			for(ReduceRejectReason rrr : ReduceRejectReason.values()) {
-				if (ALL.put(rrr.getChar(), rrr) != null) throw new IllegalStateException("Duplicate: " + rrr);
-			}
-		}
-		
-		private ReduceRejectReason(char b) {
-			this.b = b;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-	}
-	
-	public static enum Type implements CharEnum { 
-
-		MARKET 			('M', "1"), 
-		LIMIT			('L', "2");
-
-		private final char b;
-		private final String fixCode;
-		public final static CharMap<Type> ALL = new CharMap<Type>();
-		
-		static {
-			for(Type t : Type.values()) {
-				if (ALL.put(t.getChar(), t) != null) throw new IllegalStateException("Duplicate: " + t);
-			}
-		}
-		
-		private Type(char b, String fixCode) {
-			this.b = b;
-			this.fixCode = fixCode;
-		}
-		
-		public static final Type fromFixCode(CharSequence sb) {
-			for(Type s : Type.values()) {
-				if (StringUtils.equals(s.getFixCode(), sb)) {
-					return s;
-				}
-			}
-			return null;
-		}
-		
-    	@Override
-        public final char getChar() {
-    	    return b;
-        }
-    	
-    	public final String getFixCode() {
-    		return fixCode;
-    	}
-	}
 	
 	public static enum ExecuteSide implements CharEnum {
 		
