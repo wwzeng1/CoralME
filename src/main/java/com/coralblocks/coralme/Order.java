@@ -23,6 +23,14 @@ import com.coralblocks.coralme.util.DoubleUtils;
 
 public class Order {
 
+    // Static references to maintain compatibility
+    public static final class Side extends com.coralblocks.coralme.enums.Side {}
+    public static final class TimeInForce extends com.coralblocks.coralme.enums.TimeInForce {}
+    public static final class ExecuteSide extends com.coralblocks.coralme.enums.ExecuteSide {}
+    public static final class Type extends com.coralblocks.coralme.enums.Type {}
+    public static final class RejectReason extends com.coralblocks.coralme.enums.RejectReason {}
+    public static final class CancelReason extends com.coralblocks.coralme.enums.CancelReason {}
+
 	final static String EMPTY_CLIENT_ORDER_ID = "NULL";
 	
 	public final static int CLIENT_ORDER_ID_MAX_LENGTH = 64;
