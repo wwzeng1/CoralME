@@ -26,6 +26,7 @@ import com.coralblocks.coralme.enums.RejectReason;
 import com.coralblocks.coralme.enums.Side;
 import com.coralblocks.coralme.enums.TimeInForce;
 import com.coralblocks.coralme.enums.Type;
+import com.coralblocks.coralme.util.ArrayObjectPool;
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.LinkedObjectPool;
 import com.coralblocks.coralme.util.LongMap;
@@ -856,7 +857,7 @@ public class OrderBook implements OrderListener {
 	}
 	
 	@Override
-	public void onOrderRejected(long time, Order order, Order.RejectReason reason) {
+	public void onOrderRejected(long time, Order order, RejectReason reason) {
 	
 		removeOrder(order);
 		
