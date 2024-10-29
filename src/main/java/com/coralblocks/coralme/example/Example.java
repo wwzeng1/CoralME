@@ -16,8 +16,8 @@
 package com.coralblocks.coralme.example;
 
 import com.coralblocks.coralme.Order;
-import com.coralblocks.coralme.Order.Side;
-import com.coralblocks.coralme.Order.TimeInForce;
+import com.coralblocks.coralme.enums.Side;
+import com.coralblocks.coralme.enums.TimeInForce;
 import com.coralblocks.coralme.OrderBook;
 import com.coralblocks.coralme.OrderBookLogger;
 
