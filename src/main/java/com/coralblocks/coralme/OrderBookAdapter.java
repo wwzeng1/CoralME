@@ -15,9 +15,9 @@
  */
 package com.coralblocks.coralme;
 
-import com.coralblocks.coralme.Order.CancelReason;
-import com.coralblocks.coralme.Order.ExecuteSide;
-import com.coralblocks.coralme.Order.RejectReason;
+import com.coralblocks.coralme.enums.CancelReason;
+import com.coralblocks.coralme.enums.ExecuteSide;
+import com.coralblocks.coralme.enums.RejectReason;
 
 public class OrderBookAdapter implements OrderBookListener {
     

@@ -15,10 +15,10 @@
  */
 package com.coralblocks.coralme;
 
-import com.coralblocks.coralme.Order.CancelReason;
-import com.coralblocks.coralme.Order.ExecuteSide;
-import com.coralblocks.coralme.Order.RejectReason;
-import com.coralblocks.coralme.Order.Side;
+import com.coralblocks.coralme.enums.CancelReason;
+import com.coralblocks.coralme.enums.ExecuteSide;
+import com.coralblocks.coralme.enums.RejectReason;
+import com.coralblocks.coralme.enums.Side;
 
 public class PriceLevel implements OrderListener {
     

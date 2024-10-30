@@ -20,12 +20,17 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import com.coralblocks.coralme.Order.CancelReason;
 import com.coralblocks.coralme.Order.ExecuteSide;
 import com.coralblocks.coralme.Order.RejectReason;
 import com.coralblocks.coralme.Order.Side;
 import com.coralblocks.coralme.Order.TimeInForce;
 import com.coralblocks.coralme.Order.Type;
+import com.coralblocks.coralme.util.ArrayObjectPool;
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.LinkedObjectPool;
 import com.coralblocks.coralme.util.LongMap;
@@ -856,7 +861,7 @@ public class OrderBook implements OrderListener {
 	}
 	
 	@Override
-	public void onOrderRejected(long time, Order order, Order.RejectReason reason) {
+	public void onOrderRejected(long time, Order order, RejectReason reason) {
 	
 		removeOrder(order);
 		
